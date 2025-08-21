@@ -2,10 +2,13 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Mapbox Groups & Subgroups</title>
+  <title>Mapbox 2D Map with Groups & Subgroups</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+
+  <!-- Mapbox GL JS -->
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+
   <style>
     body { margin:0; padding:0; }
     #map { position:absolute; top:0; bottom:0; width:100%; }
@@ -15,11 +18,13 @@
       padding:10px;
       font-family:sans-serif;
       z-index:1;
+      max-width:200px;
     }
     .subcategory { margin-left:15px; }
   </style>
 </head>
 <body>
+  <!-- Checkbox menu -->
   <div id="menu">
     <label><input type="checkbox" value="Medical" checked> Medical Conferences</label><br>
     <div class="subcategory">
@@ -32,17 +37,23 @@
       <label><input type="checkbox" value="Robotics" checked> Robotics</label>
     </div>
   </div>
+
   <div id="map"></div>
 
   <script>
+    // Your Mapbox access token
     mapboxgl.accessToken = 'pk.eyJ1IjoibWFqYS1wYXZsaWNpYyIsImEiOiJjbWVpYnloeWowMG5xMmtzOGdnN2tjempnIn0.2LRD1_4AAyAVQWZ9kTZa2A';
+
+    // Initialize 2D map
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [-95, 40],
-      zoom: 3
+      zoom: 3,
+      projection: 'mercator' // 2D flat
     });
 
+    // Conference data
     const data = {
       "type": "FeatureCollection",
       "features": [
@@ -70,10 +81,14 @@
     };
 
     map.on('load', () => {
+      // Flat map
+      map.setPitch(0);
+      map.setBearing(0);
+
       // Add data source
       map.addSource('conferences', { type: 'geojson', data });
 
-      // Add a layer for all points
+      // Add points layer
       map.addLayer({
         id: 'conferences-layer',
         type: 'circle',
@@ -90,7 +105,7 @@
         }
       });
 
-      // Add popups
+      // Popups
       map.on('click', 'conferences-layer', (e) => {
         const props = e.features[0].properties;
         new mapboxgl.Popup()
@@ -98,6 +113,10 @@
           .setHTML(`<b>${props.title}</b><br>${props.category} → ${props.subcategory}`)
           .addTo(map);
       });
+
+      // Change cursor on hover
+      map.on('mouseenter', 'conferences-layer', () => map.getCanvas().style.cursor = 'pointer');
+      map.on('mouseleave', 'conferences-layer', () => map.getCanvas().style.cursor = '');
     });
 
     // Filtering logic
@@ -105,6 +124,7 @@
     menu.addEventListener('change', () => {
       const checked = Array.from(menu.querySelectorAll('input:checked')).map(i => i.value);
 
+      // Filter by category OR subcategory (like Leaflet version)
       map.setFilter('conferences-layer', [
         'any',
         ['in', ['get', 'category'], ['literal', checked]],
