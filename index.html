@@ -1,136 +1,465 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Mapbox 2D Map with Groups & Subgroups</title>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta charset="utf-8" />
+  <title>Conferences 2026 — Mapbox (Semester & Subspecialty)</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
 
   <!-- Mapbox GL JS -->
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
 
   <style>
-    body { margin:0; padding:0; }
-    #map { position:absolute; top:0; bottom:0; width:100%; }
-    #menu {
-      position:absolute;
-      background:white;
-      padding:10px;
-      font-family:sans-serif;
-      z-index:1;
-      max-width:200px;
+    :root {
+      --sidebar-w: 320px;
     }
-    .subcategory { margin-left:15px; }
+    * { box-sizing: border-box; }
+    body { margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    #map { position: absolute; top:0; bottom:0; left: var(--sidebar-w); right:0; }
+    #menu {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      overflow: auto;
+      background: #fff;
+      padding: 16px 14px;
+      border-right: 1px solid #e6e6e6;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 12px 0 6px;
+      color: #222;
+      letter-spacing: .2px;
+      text-transform: uppercase;
+    }
+    .semester {
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+    .subspecialty-group { margin: 8px 0 6px 0; }
+    .checkbox-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; line-height: 1.2;
+      padding: 4px 2px; border-radius: 8px;
+    }
+    .checkbox-row:hover { background: #f7f7f7; }
+    .dot {
+      display:inline-block; width:10px; height:10px; border-radius:50%;
+      border: 1px solid rgba(0,0,0,.15);
+    }
+    .legend { font-size: 12px; color:#666; margin-top: 6px; }
+    .search-row { display:flex; gap:8px; margin-bottom:10px; }
+    .search-row input {
+      flex:1; padding:8px 10px; border:1px solid #ddd; border-radius:10px; font-size:14px;
+    }
+    .pill { display:inline-block; font-size:11px; padding:2px 6px; border-radius:999px; background:#f2f2f2; color:#444; }
+    .footer-note { color:#888; font-size:11px; margin-top:8px; }
+    .hr { height:1px; background:#eee; margin:10px 0; }
+    .mute { color:#666; }
+    .sticky-top { position: sticky; top: 0; background: white; padding-bottom: 8px; z-index: 2; }
   </style>
 </head>
 <body>
-  <!-- Checkbox menu -->
   <div id="menu">
-    <label><input type="checkbox" value="Medical" checked> Medical Conferences</label><br>
-    <div class="subcategory">
-      <label><input type="checkbox" value="Oncology" checked> Oncology</label><br>
-      <label><input type="checkbox" value="Cardiology" checked> Cardiology</label>
+    <div class="sticky-top">
+      <div class="section-title">Filters</div>
+    
     </div>
-    <label><input type="checkbox" value="Tech" checked> Tech Conferences</label><br>
-    <div class="subcategory">
-      <label><input type="checkbox" value="AI" checked> AI</label><br>
-      <label><input type="checkbox" value="Robotics" checked> Robotics</label>
+    <div id="filters"></div>
+    <div class="hr"></div>
+    <div class="legend">
+      Pins are colored by <b>Subspecialty</b>.
     </div>
+    <div class="footer-note">Data: Sheet 1 (I & II semester)</div>
   </div>
 
   <div id="map"></div>
 
   <script>
-    // Your Mapbox access token
+    // Mapbox token
     mapboxgl.accessToken = 'pk.eyJ1IjoibWFqYS1wYXZsaWNpYyIsImEiOiJjbWVpYnloeWowMG5xMmtzOGdnN2tjempnIn0.2LRD1_4AAyAVQWZ9kTZa2A';
 
-    // Initialize 2D map
+    // -----------------------------
+    // City → [lng, lat] dictionary
+    // (handles minor typos & variants)
+    // -----------------------------
+    const cityCoords = {
+      "San Francisco": [-122.4194, 37.7749],
+      "Edinburgh": [-3.1883, 55.9533],
+      "Dublin": [-6.2603, 53.3498],
+      "Salt Lake City": [-111.8910, 40.7608],
+      "San Diego": [-117.1611, 32.7157],
+      "Hong Kong": [114.1694, 22.3193],
+      "Stockholm": [18.0686, 59.3293],
+      "Los Angeles": [-118.2437, 34.0522],
+      "Copenhagen": [12.5683, 55.6761],
+      "Lisabon": [-9.1393, 38.7223], // treat as Lisbon
+      "Lisbon": [-9.1393, 38.7223],
+      "Miami": [-80.1918, 25.7617],
+      "Phoenix": [-112.0740, 33.4484],
+      "Orlando": [-81.3792, 28.5383],
+      "Budapest": [19.0402, 47.4979],
+      "London": [-0.1276, 51.5074],
+      "Seville": [-5.9845, 37.3891],
+      "Krakow": [19.9445, 50.0647],
+      "San Antonio": [-98.4936, 29.4241],
+      "New Orleans": [-90.0715, 29.9511],
+      "Florence": [11.2558, 43.7696],
+      "Denver": [-104.9903, 39.7392],
+      "Prague": [14.4378, 50.0755],
+      "Warsaw": [21.0122, 52.2297],
+      "San Juan": [-66.1057, 18.4655],
+      "São Paulo": [-46.6333, -23.5505],
+      "Sao Paulo": [-46.6333, -23.5505],
+      "Paris": [2.3522, 48.8566],
+      "Munich": [11.5820, 48.1351],
+      "Kuala Lumpur": [101.6869, 3.1390],
+      "Washington, DC": [-77.0369, 38.9072],
+      "Washington": [-77.0369, 38.9072],
+      "Toronto": [-79.3832, 43.6532],
+      "Berlin": [13.4050, 52.5200],
+      "Istanbul, Turkey": [28.9784, 41.0082],
+      "Istanbul": [28.9784, 41.0082],
+      "Barcelona": [2.1734, 41.3851],
+      "Charlotte": [-80.8431, 35.2271],
+      "Chicago": [-87.6298, 41.8781],
+      "Glasgow": [-4.2518, 55.8642],
+      "Athens": [23.7275, 37.9838],
+      "Philadelphia": [-75.1652, 39.9526],
+      "Amsterdam": [4.9041, 52.3676],
+      "Lugano": [8.9511, 46.0037],
+      "Lille": [3.0573, 50.6292],
+      "Geneva": [6.1432, 46.2044],
+      "Queensland": [153.0251, -27.4698], // Brisbane (QLD capital)
+      "Marseilles": [5.3698, 43.2965], // treat as Marseille
+      "Marseille": [5.3698, 43.2965],
+      "Seoul": [126.9780, 37.5665],
+      "Hiroshima": [132.4553, 34.3853],
+      "Vienna": [16.3738, 48.2082],
+      "Thessaloniki": [22.9444, 40.6401],
+      "Madrid": [-3.7038, 40.4168],
+      "Las Vegas": [-115.1398, 36.1699]
+    };
+
+    // Normalize city strings
+    const normalizeCity = (s) => {
+      if (!s) return s;
+      return s
+        .replace(/\bChopenhagen\b/i, 'Copenhagen')
+        .replace(/\bLisabon\b/i, 'Lisbon')
+        .replace(/\bMarseilles\b/i, 'Marseille')
+        .replace(/\bWashington\b(?!,\s*DC\b)/i, 'Washington, DC')
+        .trim();
+    };
+
+    // -----------------------------
+    // Raw records from Sheet 1
+    // (I + II semester)
+    // -----------------------------
+    const records = [
+      // I semester
+      {semester:'I semester', sub:'Oncology', name:'ASCO GI', full:'ASCO Gastrointestinal (GI) Cancers Symposium', city:'San Francisco', start:'1/8/2026', end:'1/10/2026'},
+      {semester:'I semester', sub:'Hepatology', name:'EASL-LCS', full:'EASL Liver Cancer Summit', city:'Edinburgh', start:'1/22/2026', end:'1/24/2026'},
+      {semester:'I semester', sub:'Hematology', name:'EAHAD', full:'European Association for Haemophilia and Allied Disorders', city:'Dublin', start:'2/3/2026', end:'2/6/2026'},
+      {semester:'I semester', sub:'Hematology', name:'ASTCT/CIBMTR', full:'American Society for Transplantation and Cellular Therapy /Center for International Blood and Marrow Transplant Research', city:'Salt Lake City', start:'2/4/2026', end:'2/7/2026'},
+      {semester:'I semester', sub:'Neurology', name:'ACTRIMS Forum', full:'Americas Committee for Treatment and Research in Multiple Sclerosis', city:'San Diego', start:'2/5/2026', end:'2/7/2026'},
+      {semester:'I semester', sub:'Ophthalmology', name:'APAO', full:'Asia-Pacific Academy of Ophthalmology', city:'Hong Kong', start:'2/5/2026', end:'2/8/2026'},
+      {semester:'I semester', sub:'Gastroenterology', name:'ECCO', full:'European Crohn’s and Colitis Organisation', city:'Stockholm', start:'2/18/2026', end:'2/21/2026'},
+      {semester:'I semester', sub:'Healthcare Innovation', name:'VIVE', full:'ViVE – The Healthcare Innovation Conference', city:'Los Angeles', start:'2/22/2026', end:'2/25/2026'},
+      {semester:'I semester', sub:'Oncology', name:'ASCO GU', full:'ASCO Genitourinary (GU) Cancers Symposium', city:'San Francisco', start:'2/26/2026', end:'2/28/2026'},
+      {semester:'I semester', sub:'Oncology', name:'ESGO', full:'European Society of Gynaecological Oncology', city:'Copenhagen', start:'2/26/2026', end:'2/28/2026'},
+      {semester:'I semester', sub:'Rheumatology', name:'SLEuro', full:'15th European Lupus Meeting', city:'Lisabon', start:'3/4/2026', end:'3/7/2026'},
+      {semester:'I semester', sub:'Oncology', name:'MBCC', full:'Miami Breast Cancer Conference', city:'Miami', start:'3/5/2026', end:'3/8/2026'},
+      {semester:'I semester', sub:'Oncology', name:'SSO', full:'Society of Surgical Oncology', city:'Phoenix', start:'3/5/2026', end:'3/7/2026'},
+      {semester:'I semester', sub:'Neurology', name:'MDA', full:'Muscular Dystrophy Association', city:'Orlando', start:'3/8/2026', end:'3/11/2026'},
+      {semester:'I semester', sub:'Neurology', name:'SMA Europe', full:'International Scientific Congress on Spinal Muscular Atrophy', city:'Budapest', start:'3/12/2026', end:'3/14/2026'},
+      {semester:'I semester', sub:'Urology', name:'EAU', full:'European Association of Urology', city:'London', start:'3/13/2026', end:'3/16/2026'},
+      {semester:'I semester', sub:'Neurology', name:'AD/PD', full:'Alzheimer\'s Disease & Parkinson\'s Disease International Conference.', city:'Chopenhagen', start:'3/17/2026', end:'3/21/2026'},
+      {semester:'I semester', sub:'Oncology', name:'ICHNO', full:'International Congress on Innovative Approaches in Head and Neck Oncology', city:'Seville', start:'3/19/2026', end:'3/21/2026'},
+      {semester:'I semester', sub:'Ophthalmology', name:'COPHy', full:'Congress on Controversies in Ophthalmology', city:'Krakow', start:'3/20/2026', end:'3/21/2026'},
+      {semester:'I semester', sub:'Pathology', name:'USCAP', full:'United States and Canadian Academy of Pathology', city:'San Antonio', start:'3/21/2026', end:'3/26/2026'},
+      {semester:'I semester', sub:'Hematology', name:'HOPA', full:'Hematology/Oncology Pharmacy Association', city:'New Orleans', start:'3/25/2026', end:'3/28/2026'},
+      {semester:'I semester', sub:'Psychiatry', name:'SIRS', full:'Schizophrenia International Research Society', city:'Florence', start:'3/25/2026', end:'3/29/2026'},
+      {semester:'I semester', sub:'Oncology', name:'ELCC', full:'European Lung Cancer Congress', city:'Copenhagen', start:'3/25/2026', end:'3/28/2026'},
+      {semester:'I semester', sub:'Dermatology', name:'AAD', full:'American Academy of Dermatology', city:'Denver', start:'3/27/2026', end:'3/31/2026'},
+      {semester:'I semester', sub:'Psychiatry', name:'EPA', full:'European Psychiatric Association', city:'Prague', start:'3/28/2026', end:'3/31/2026'},
+      {semester:'I semester', sub:'Perinatal Medicine', name:'ECPM', full:'European Congress of Perinatal Medicine', city:'Warsaw', start:'4/9/2026', end:'4/11/2026'},
+      {semester:'I semester', sub:'Oncology', name:'SGO', full:'Society of Gynecologic Oncology', city:'San Juan', start:'4/11/2026', end:'4/13/2026'},
+      {semester:'I semester', sub:'Cardiology', name:'SOCESP', full:'Society of Cardiology of the State of São Paulo', city:'São Paulo', start:'4/14/2026', end:'4/16/2026'},
+      {semester:'I semester', sub:'Hematology', name:'HFA', full:'Hemophilia Federation of America', city:'New Orleans', start:'4/16/2026', end:'4/19/2026'},
+      {semester:'I semester', sub:'Oncology', name:'EIKCS', full:'European International Kidney Cancer Symposium', city:'Paris', start:'4/16/2026', end:'4/18/2026'},
+      {semester:'I semester', sub:'Infectious Diseases', name:'ESCMID', full:'The European Society of Clinical Microbiology and Infectious Diseases', city:'Munich', start:'4/17/2026', end:'4/21/2026'},
+      {semester:'I semester', sub:'Oncology', name:'AACR', full:'American Association for Cancer Research', city:'San Diego', start:'4/17/2026', end:'4/22/2026'},
+      {semester:'I semester', sub:'Hematology', name:'WFH', full:'The World Federation of Hemophilia', city:'Kuala Lumpur', start:'4/19/2026', end:'4/22/2026'},
+      {semester:'I semester', sub:'Dermatology', name:'EADO', full:'European Association of Dermato-Oncology', city:'Prague', start:'4/23/2026', end:'4/25/2026'},
+      {semester:'I semester', sub:'Oncology', name:'ONS', full:'Oncology Nursing Society', city:'Washington, DC', start:'4/24/2026', end:'4/28/2026'},
+      {semester:'I semester', sub:'Cardiothoracic Transplantation', name:'ISHLT', full:'International Society for Heart and Lung Transplantation', city:'Toronto', start:'4/25/2026', end:'4/23/2026'},
+      {semester:'I semester', sub:'Obstetrics & Gynecology', name:'ACOG', full:'American College of Obstetricians and Gynecologists', city:'Washington', start:'5/1/2026', end:'5/3/2026'},
+      {semester:'I semester', sub:'Oncology', name:'ESMO BC', full:'ESMO Breast Cancer Congress', city:'Berlin', start:'5/6/2026', end:'5/8/2026'},
+      {semester:'I semester', sub:'Obesity / Metabolic Disorders', name:'ECO', full:'European Association for the Study of Obesity', city:'Istanbul, Turkey', start:'5/12/2026', end:'5/15/2026'},
+      {semester:'I semester', sub:'Pulmonology', name:'ATS', full:'American Thoracic Society', city:'Orlando', start:'5/15/2026', end:'5/20/2026'},
+      {semester:'I semester', sub:'Urology', name:'AUA', full:'American Urological Association', city:'Washington', start:'5/15/2026', end:'5/18/2026'},
+      {semester:'I semester', sub:'Hepatology', name:'EASL', full:'European Association for the Study of the Liver', city:'Barcelona', start:'5/27/2026', end:'5/30/2026'},
+      {semester:'I semester', sub:'Neurology', name:'CMSC', full:'Consortium of Multiple Sclerosis Centers', city:'Charlotte', start:'5/27/2026', end:'5/30/2026'},
+      {semester:'I semester', sub:'Oncology', name:'ASCO', full:'American Society of Clinical Oncology', city:'Chicago', start:'5/29/2026', end:'6/2/2026'},
+      {semester:'I semester', sub:'Rheumatology', name:'EULAR', full:'European Congress of Rheumatology', city:'London', start:'5/30/2026', end:'6/1/2026'},
+      {semester:'I semester', sub:'Nephrology', name:'ERA', full:'European Renal Association', city:'Glasgow', start:'6/3/2026', end:'6/6/2026'},
+      {semester:'I semester', sub:'Thoracic Surgery', name:'ESTS', full:'European Conference on General Thoracic Surgery', city:'Athens', start:'6/7/2026', end:'6/9/2026'},
+      {semester:'I semester', sub:'Hematology', name:'EHA', full:'European Hematology Association', city:'Stockholm', start:'6/11/2026', end:'6/14/2026'},
+      {semester:'I semester', sub:'Oncology', name:'ESMO Asia', full:'ESMO Targeted Anticancer Therapies (TAT) Asia Congress', city:'Hong Kong', start:'6/12/2026', end:'6/14/2026'},
+      {semester:'I semester', sub:'Oncology', name:'GAWC', full:'Global Academy of Women’s Cancer', city:'Munich', start:'6/13/2026', end:'6/14/2026'},
+      {semester:'I semester', sub:'Drug Development / Regulatory Science', name:'DIA', full:'Drug Information Association', city:'Philadelphia', start:'6/14/2026', end:'6/18/2026'},
+      {semester:'I semester', sub:'Healthcare Innovation', name:'HLTH Europe', full:'HLTH Europe: The Premier Healthcare Innovation Event in Europe', city:'Amsterdam', start:'6/15/2026', end:'6/18/2026'},
+      {semester:'I semester', sub:'Oncology', name:'ICML', full:'International Conference on Malignant Lymphoma', city:'Lugano', start:'6/17/2026', end:'6/21/2026'},
+      {semester:'I semester', sub:'Pediatric', name:'ESPGHAN', full:'European Society for Paediatric Gastroenterology, Hepatology and Nutrition', city:'Lille', start:'6/24/2026', end:'6/27/2026'},
+      {semester:'I semester', sub:'Neurology', name:'CureSMA', full:'Annual SMA Research & Clinical Care Meeting', city:'Orlando', start:'6/26/2026', end:'6/29/2026'},
+      {semester:'I semester', sub:'Neurology', name:'EAN', full:'European Academy of Neurology', city:'Geneva', start:'6/27/2026', end:'6/30/2026'},
+
+      // II semester
+      {semester:'II semester', sub:'Oncology', name:'ESMO GI', full:'ESMO Gastrointestinal Cancers Congress', city:'Munich', start:'7/1/2026', end:'7/4/2026'},
+      {semester:'II semester', sub:'Hematology', name:'ISTH', full:'International Society on Thrombosis and Haemostasis', city:'Paris', start:'7/11/2026', end:'7/15/2026'},
+      {semester:'II semester', sub:'Cardiology', name:'ESC', full:'European Society of Cardiology', city:'Munich', start:'8/28/2026', end:'8/31/2026'},
+      {semester:'II semester', sub:'Ophthalmology', name:'APVRS', full:'Asia-Pacific Vitreo-retina Society', city:'Queensland', start:'8/28/2026', end:'8/30/2026'},
+      {semester:'II semester', sub:'Infectious Diseases', name:'ESWI', full:'World One Health Congress', city:'Lisabon', start:'9/4/2026', end:'9/7/2026'},
+      {semester:'II semester', sub:'Pulmonology', name:'ERS', full:'European Respiratory Society', city:'Barcelona', start:'9/5/2026', end:'9/9/2026'},
+      {semester:'II semester', sub:'Pediatric', name:'ESPE', full:'European Society for Paediatric Endocrinology', city:'Marseilles', start:'9/8/2026', end:'9/10/2026'},
+      {semester:'II semester', sub:'Oncology', name:'WCLC/IASL', full:'World Conference on Lung Cancer', city:'Seoul', start:'9/12/2026', end:'9/15/2026'},
+      {semester:'II semester', sub:'Neurology', name:'WMS', full:'World Muscle Society', city:'Hiroshima', start:'9/29/2026', end:'10/3/2026'},
+      {semester:'II semester', sub:'Ophthalmology', name:'EURETINA', full:'European Society of Retina Specialists', city:'Vienna', start:'10/1/2026', end:'10/4/2026'},
+      {semester:'II semester', sub:'Neurology', name:'MDS', full:'International Parkinson and Movement Disorder Society', city:'Seoul', start:'10/4/2026', end:'10/8/2026'},
+      {semester:'II semester', sub:'Hematology', name:'DGHO', full:'German, Austrian and Swiss Societies of Hematology and Medical Oncology', city:'Vienna', start:'10/9/2026', end:'10/12/2026'},
+      {semester:'II semester', sub:'Pediatric', name:'EPNS', full:'European Paediatric Neurology Society', city:'Thessaloniki', start:'10/16/2026', end:'10/17/2026'},
+      {semester:'II semester', sub:'Gastroenterology', name:'UEGW', full:'United European Gastroenterology', city:'TBA', start:'10/17/2026', end:'10/20/2026'},
+      {semester:'II semester', sub:'Oncology', name:'ESMO', full:'European Society for Medical Oncology', city:'Madrid', start:'10/23/2026', end:'10/27/2026'},
+      {semester:'II semester', sub:'Allergy / Immunology', name:'ACAAI', full:'American College of Allergy, Asthma and Immunology', city:'Phoenix', start:'11/12/2026', end:'11/16/2026'},
+      {semester:'II semester', sub:'Healthcare Innovation', name:'HLTH USA', full:'HLTH USA: The Premier Healthcare Innovation Event (USA)', city:'Las Vegas', start:'11/15/2026', end:'11/18/2026'}
+    ];
+
+    // Normalize & attach coordinates; skip items with unknown coords (e.g., TBA)
+    const features = [];
+    for (const r of records) {
+      const city = normalizeCity(r.city);
+      const coords = cityCoords[city];
+      if (!coords) continue; // skip unknown / TBA
+      features.push({
+        type: 'Feature',
+        properties: {
+          semester: r.semester,
+          subcategory: r.sub, // used for color + filtering
+          name: r.name,
+          full_name: r.full,
+          location: city,
+          start: r.start,
+          end: r.end
+        },
+        geometry: { type: 'Point', coordinates: coords }
+      });
+    }
+
+    const data = { type: 'FeatureCollection', features };
+
+    // Build color palette & mapping for subspecialties
+    const distinctSubs = [...new Set(features.map(f => f.properties.subcategory))].sort();
+    const palette = [
+      "#e6194b","#3cb44b","#ffe119","#0082c8",
+    "#f58231","#911eb4","#46f0f0","#f032e6",
+    "#d2f53c","#fabebe","#008080","#e6beff",
+    "#aa6e28","#fffac8","#800000","#aaffc3",
+    "#808000","#ffd8b1","#000080","#808080",
+    "#6a3d9a","#b15928","#2b908f","#ff1493"
+    ];
+    const subColor = {};
+    distinctSubs.forEach((s, i) => subColor[s] = palette[i % palette.length]);
+
+    // Create the map
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-95, 40],
-      zoom: 3,
-      projection: 'mercator' // 2D flat
+      center: [10, 35], // Europe-ish
+      zoom: 2.2,
+      projection: 'mercator'
     });
 
-    // Conference data
-    const data = {
-      "type": "FeatureCollection",
-      "features": [
-        {
-          "type": "Feature",
-          "properties": { "category": "Medical", "subcategory": "Oncology", "title": "Oncology Summit" },
-          "geometry": { "type": "Point", "coordinates": [-77.0369, 38.9072] } // DC
-        },
-        {
-          "type": "Feature",
-          "properties": { "category": "Medical", "subcategory": "Cardiology", "title": "Heart Health Conf" },
-          "geometry": { "type": "Point", "coordinates": [-87.6298, 41.8781] } // Chicago
-        },
-        {
-          "type": "Feature",
-          "properties": { "category": "Tech", "subcategory": "AI", "title": "AI Expo" },
-          "geometry": { "type": "Point", "coordinates": [-122.4194, 37.7749] } // SF
-        },
-        {
-          "type": "Feature",
-          "properties": { "category": "Tech", "subcategory": "Robotics", "title": "Robotics World" },
-          "geometry": { "type": "Point", "coordinates": [-74.0060, 40.7128] } // NYC
-        }
-      ]
-    };
-
     map.on('load', () => {
-      // Flat map
       map.setPitch(0);
       map.setBearing(0);
 
-      // Add data source
       map.addSource('conferences', { type: 'geojson', data });
 
-      // Add points layer
+      // Build a categorical 'match' expression for circle-color by subcategory
+      const matchColor = ['match', ['get', 'subcategory']];
+      distinctSubs.forEach(s => { matchColor.push(s, subColor[s]); });
+      matchColor.push('#cccccc'); // fallback
+
       map.addLayer({
         id: 'conferences-layer',
         type: 'circle',
         source: 'conferences',
         paint: {
           'circle-radius': 8,
-          'circle-color': [
-            'match',
-            ['get', 'category'],
-            'Medical', '#d73027',
-            'Tech', '#4575b4',
-            '#cccccc'
-          ]
+          'circle-color': matchColor,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#ffffff'
         }
       });
 
       // Popups
       map.on('click', 'conferences-layer', (e) => {
-        const props = e.features[0].properties;
+        const p = e.features[0].properties;
         new mapboxgl.Popup()
           .setLngLat(e.lngLat)
-          .setHTML(`<b>${props.title}</b><br>${props.category} → ${props.subcategory}`)
+          .setHTML(`
+            <div style="font-weight:700">${p.name}</div>
+            <div class="mute">${p.full_name}</div>
+            <div style="margin-top:4px"><span class="pill">${p.subcategory}</span> • <span class="pill">${p.semester}</span></div>
+            <div style="margin-top:6px"><b>Location:</b> ${p.location}</div>
+            <div><b>Dates:</b> ${p.start} &rarr; ${p.end}</div>
+          `)
           .addTo(map);
       });
 
-      // Change cursor on hover
       map.on('mouseenter', 'conferences-layer', () => map.getCanvas().style.cursor = 'pointer');
       map.on('mouseleave', 'conferences-layer', () => map.getCanvas().style.cursor = '');
+
+      // Build sidebar filters dynamically
+      buildSidebar();
+      applyFilters(); // initial filter (all on)
     });
 
-    // Filtering logic
-    const menu = document.getElementById('menu');
-    menu.addEventListener('change', () => {
-      const checked = Array.from(menu.querySelectorAll('input:checked')).map(i => i.value);
+    // -----------------------------
+    // Sidebar & Filtering
+    // -----------------------------
+    const filtersRoot = document.getElementById('filters');
 
-      // Filter by category OR subcategory (like Leaflet version)
-      map.setFilter('conferences-layer', [
-        'any',
-        ['in', ['get', 'category'], ['literal', checked]],
-        ['in', ['get', 'subcategory'], ['literal', checked]]
-      ]);
+    function groupBySemesterAndSub(dataFeatures) {
+      const bySem = {};
+      for (const f of dataFeatures) {
+        const sem = f.properties.semester;
+        const sub = f.properties.subcategory;
+        if (!bySem[sem]) bySem[sem] = new Set();
+        bySem[sem].add(sub);
+      }
+      // convert sets to arrays and sort
+      const res = {};
+      for (const sem of Object.keys(bySem)) res[sem] = [...bySem[sem]].sort();
+      return res;
+    }
+
+    function colorDot(color) { return `<span class="dot" style="background:${color}"></span>`; }
+
+      function buildSidebar() {
+    const grouped = groupBySemesterAndSub(features);
+    const allSemesters = Object.keys(grouped).sort(); // ["I semester", "II semester"]
+
+    const wrapper = document.createElement('div');
+
+    allSemesters.forEach(sem => {
+      const box = document.createElement('div');
+      box.className = 'semester';
+
+      // Semester title with master checkbox
+      const titleRow = document.createElement('label');
+      titleRow.className = 'checkbox-row section-title';
+      const semId = `sem-${sem.replace(/\s+/g,'-')}`;
+      titleRow.innerHTML = `<input type="checkbox" id="${semId}" data-semester-master="${sem}"> ${sem}`;
+      box.appendChild(titleRow);
+
+      // Subspecialty checkboxes
+      const subs = grouped[sem];
+      subs.forEach(sub => {
+        const color = subColor[sub] || '#ccc';
+        const id = `sub-${sem.replace(/\s+/g,'-')}-${sub.replace(/[^\w]+/g,'_')}`;
+        const row = document.createElement('label');
+        row.className = 'checkbox-row subspecialty-group';
+        row.innerHTML = `
+          <input type="checkbox" id="${id}" data-semester="${sem}" data-sub="${sub}">
+          ${colorDot(color)} ${sub}
+        `;
+        box.appendChild(row);
+      });
+
+      wrapper.appendChild(box);
     });
+
+    // --- Clear All button at bottom ---
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = "Clear All";
+    clearBtn.style.cssText = `
+      display:block; margin-top:12px; padding:8px 12px; font-size:13px;
+      border:1px solid #ccc; border-radius:8px; background:#f9f9f9; cursor:pointer;
+    `;
+    clearBtn.addEventListener('click', () => {
+      filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.checked = false;
+        cb.indeterminate = false;
+      });
+      applyFilters();
+    });
+    wrapper.appendChild(clearBtn);
+
+    filtersRoot.innerHTML = '';
+    filtersRoot.appendChild(wrapper);
+
+    // --- Checkbox logic ---
+    filtersRoot.addEventListener('change', e => {
+      const target = e.target;
+
+      // Semester master clicked
+      if (target.dataset.semesterMaster) {
+        const sem = target.dataset.semesterMaster;
+        const subs = filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`);
+        subs.forEach(cb => cb.checked = target.checked);
+        target.indeterminate = false;
+      }
+
+      // Subspecialty clicked → update semester master
+      if (target.dataset.sub) {
+        const sem = target.dataset.semester;
+        const subs = [...filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`)];
+        const master = filtersRoot.querySelector(`input[data-semester-master="${sem}"]`);
+        const allChecked = subs.every(cb => cb.checked);
+        const noneChecked = subs.every(cb => !cb.checked);
+
+        master.checked = allChecked;
+        master.indeterminate = !allChecked && !noneChecked;
+      }
+
+      applyFilters();
+    });
+
+    // Search box listener
+    document.getElementById('searchInput').addEventListener('input', () => applyFilters());
+  }
+
+  // Filter logic (same as before: map empty until selection)
+  function applyFilters() {
+  // Gather checked subspecialties only (they’re the real filter)
+  const subChecked = [...filtersRoot.querySelectorAll('input[data-sub]:checked')]
+    .map(i => i.dataset.sub);
+
+  // Nothing checked → show nothing
+  if (subChecked.length === 0) {
+    if (map.getLayer('conferences-layer')) {
+      map.setFilter('conferences-layer', ['==', ['get', 'subcategory'], '__none__']);
+    }
+    return;
+  }
+
+  // Filter by checked subspecialties
+  const finalFilter = [
+    'in',
+    ['get', 'subcategory'],
+    ['literal', subChecked]
+  ];
+
+  if (map.getLayer('conferences-layer')) {
+    map.setFilter('conferences-layer', finalFilter);
+  }
+}
   </script>
 </body>
 </html>
