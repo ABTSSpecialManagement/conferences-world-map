@@ -2,86 +2,80 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Conferences 2026 — Mapbox (Semester & Subspecialty)</title>
+  <title>Conferences 2026 — Mapbox</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-
-  <!-- Mapbox GL JS -->
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
-
   <style>
-    :root {
-      --sidebar-w: 320px;
-    }
+    :root { --sidebar-w: 320px; --right-w: 360px; }
     * { box-sizing: border-box; }
-    body { margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
-    #map { position: absolute; top:0; bottom:0; left: var(--sidebar-w); right:0; }
+    body { margin:0; font-family: system-ui, sans-serif; }
+    #map { position: absolute; top:0; bottom:0; left: var(--sidebar-w); right: var(--right-w); }
     #menu {
-      position: absolute;
-      top: 0; left: 0; bottom: 0;
-      width: var(--sidebar-w);
-      overflow: auto;
-      background: #fff;
-      padding: 16px 14px;
-      border-right: 1px solid #e6e6e6;
+      position: absolute; top:0; left:0; bottom:0;
+      width: var(--sidebar-w); overflow:auto; background:#fff;
+      padding:16px 14px; border-right:1px solid #e6e6e6;
     }
-    .section-title {
-      font-size: 14px;
-      font-weight: 700;
-      margin: 12px 0 6px;
-      color: #222;
-      letter-spacing: .2px;
-      text-transform: uppercase;
+    #cards-panel {             /* NEW right panel */
+      position: absolute; top:0; right:0; bottom:0;
+      width: var(--right-w); overflow:auto; background:#fafafa;
+      border-left:1px solid #e6e6e6; padding:16px 14px;
     }
-    .semester {
-      border: 1px solid #eee;
-      border-radius: 12px;
-      padding: 10px 12px;
-      margin-bottom: 12px;
-      box-shadow: 0 1px 2px rgba(0,0,0,.04);
-    }
-    .subspecialty-group { margin: 8px 0 6px 0; }
-    .checkbox-row {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 14px; line-height: 1.2;
-      padding: 4px 2px; border-radius: 8px;
-    }
-    .checkbox-row:hover { background: #f7f7f7; }
-    .dot {
-      display:inline-block; width:10px; height:10px; border-radius:50%;
-      border: 1px solid rgba(0,0,0,.15);
-    }
-    .legend { font-size: 12px; color:#666; margin-top: 6px; }
-    .search-row { display:flex; gap:8px; margin-bottom:10px; }
-    .search-row input {
-      flex:1; padding:8px 10px; border:1px solid #ddd; border-radius:10px; font-size:14px;
-    }
-    .pill { display:inline-block; font-size:11px; padding:2px 6px; border-radius:999px; background:#f2f2f2; color:#444; }
-    .footer-note { color:#888; font-size:11px; margin-top:8px; }
-    .hr { height:1px; background:#eee; margin:10px 0; }
-    .mute { color:#666; }
-    .sticky-top { position: sticky; top: 0; background: white; padding-bottom: 8px; z-index: 2; }
+    .section-title { font-size:14px; font-weight:700; margin:12px 0 6px; }
+    .semester { border:1px solid #eee; border-radius:12px; padding:10px 12px; margin-bottom:12px; }
+    .checkbox-row { display:flex; align-items:center; gap:8px; font-size:14px; padding:4px 2px; border-radius:8px; }
+    .checkbox-row:hover { background:#f7f7f7; }
+    .dot { width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,.15); }
+    button.clear { display:block; margin-top:12px; padding:8px 12px; font-size:13px;
+      border:1px solid #ccc; border-radius:8px; background:#f9f9f9; cursor:pointer; }
+    .card-group { margin-bottom:16px; }
+    .card-group-title { font-size:13px; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+    .card { background:white; border:1px solid #ddd; border-radius:10px; padding:10px 12px; margin-bottom:8px;
+      box-shadow:0 1px 2px rgba(0,0,0,0.05); cursor:pointer; }
+    .card-title { font-size:14px; font-weight:600; }
+    .card-sub { font-size:13px; color:#666; }
+    .card-dates { font-size:12px; color:#444; margin-top:4px; }
+    .card {
+  background:white;
+  border:1px solid #ddd;
+  border-radius:10px;
+  padding:10px 12px;
+  margin-bottom:8px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.05);
+  cursor:pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.card:hover {
+  background:#f2f7ff;          /* soft blue tint */
+  border-color:#aac8ff;
+}
+.card.selected {               /* clicked/active */
+  background:#e6f0ff;
+  border-color:#4a90e2;
+  box-shadow:0 0 0 2px rgba(74,144,226,0.4);
+}
   </style>
 </head>
 <body>
   <div id="menu">
-    <div class="sticky-top">
-      <div class="section-title">Filters</div>
-    
-    </div>
+    <div class="section-title">Filters</div>
     <div id="filters"></div>
-    <div class="hr"></div>
-    <div class="legend">
-      Pins are colored by <b>Subspecialty</b>.
-    </div>
-    <div class="footer-note">Data: Sheet 1 (I & II semester)</div>
+    <button class="clear" id="clearAll">Clear All</button>
   </div>
 
   <div id="map"></div>
 
+  <!-- NEW Right panel -->
+  <div id="cards-panel">
+    <div class="section-title">Selected Conferences</div>
+    <div id="cards"></div>
+  </div>
+
   <script>
     // Mapbox token
     mapboxgl.accessToken = 'pk.eyJ1IjoibWFqYS1wYXZsaWNpYyIsImEiOiJjbWVpYnloeWowMG5xMmtzOGdnN2tjempnIn0.2LRD1_4AAyAVQWZ9kTZa2A';
+let activePopup = null;
+let activeCard = null;
 
     // -----------------------------
     // City → [lng, lat] dictionary
@@ -244,222 +238,202 @@
     for (const r of records) {
       const city = normalizeCity(r.city);
       const coords = cityCoords[city];
-      if (!coords) continue; // skip unknown / TBA
+      if (!coords) continue;
       features.push({
-        type: 'Feature',
-        properties: {
-          semester: r.semester,
-          subcategory: r.sub, // used for color + filtering
-          name: r.name,
-          full_name: r.full,
-          location: city,
-          start: r.start,
-          end: r.end
-        },
-        geometry: { type: 'Point', coordinates: coords }
+        type:'Feature',
+        properties:{ semester:r.semester, subcategory:r.sub, name:r.name, full_name:r.full,
+          location:city, start:r.start, end:r.end },
+        geometry:{ type:'Point', coordinates:coords }
       });
     }
+    const data = { type:'FeatureCollection', features };
 
-    const data = { type: 'FeatureCollection', features };
+    const distinctSubs = [...new Set(features.map(f=>f.properties.subcategory))].sort();
+    const palette = ["#e6194b","#3cb44b","#ffe119","#0082c8","#f58231","#911eb4","#46f0f0","#f032e6",
+      "#d2f53c","#fabebe","#008080","#e6beff","#aa6e28","#fffac8","#800000","#aaffc3","#808000",
+      "#ffd8b1","#000080","#808080","#6a3d9a","#b15928","#2b908f","#ff1493"];
+    const subColor = {}; distinctSubs.forEach((s,i)=>subColor[s]=palette[i%palette.length]);
 
-    // Build color palette & mapping for subspecialties
-    const distinctSubs = [...new Set(features.map(f => f.properties.subcategory))].sort();
-    const palette = [
-      "#e6194b","#3cb44b","#ffe119","#0082c8",
-    "#f58231","#911eb4","#46f0f0","#f032e6",
-    "#d2f53c","#fabebe","#008080","#e6beff",
-    "#aa6e28","#fffac8","#800000","#aaffc3",
-    "#808000","#ffd8b1","#000080","#808080",
-    "#6a3d9a","#b15928","#2b908f","#ff1493"
-    ];
-    const subColor = {};
-    distinctSubs.forEach((s, i) => subColor[s] = palette[i % palette.length]);
-
-    // Create the map
     const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [10, 35], // Europe-ish
-      zoom: 2.2,
-      projection: 'mercator'
+      container:'map', style:'mapbox://styles/mapbox/streets-v12',
+      center:[10,35], zoom:2.2, projection:'mercator'
     });
 
-    map.on('load', () => {
-      map.setPitch(0);
-      map.setBearing(0);
+    map.on('load',()=>{
+      map.setPitch(0); map.setBearing(0);
+      map.addSource('conferences',{type:'geojson',data});
 
-      map.addSource('conferences', { type: 'geojson', data });
-
-      // Build a categorical 'match' expression for circle-color by subcategory
-      const matchColor = ['match', ['get', 'subcategory']];
-      distinctSubs.forEach(s => { matchColor.push(s, subColor[s]); });
-      matchColor.push('#cccccc'); // fallback
+      const matchColor=['match',['get','subcategory']];
+      distinctSubs.forEach(s=>{matchColor.push(s,subColor[s]);});
+      matchColor.push('#ccc');
 
       map.addLayer({
-        id: 'conferences-layer',
-        type: 'circle',
-        source: 'conferences',
-        paint: {
-          'circle-radius': 8,
-          'circle-color': matchColor,
-          'circle-stroke-width': 1,
-          'circle-stroke-color': '#ffffff'
-        }
+        id:'conferences-layer', type:'circle', source:'conferences',
+        paint:{ 'circle-radius':8, 'circle-color':matchColor, 'circle-stroke-width':1, 'circle-stroke-color':'#fff' }
       });
 
-      // Popups
-      map.on('click', 'conferences-layer', (e) => {
-        const p = e.features[0].properties;
-        new mapboxgl.Popup()
-          .setLngLat(e.lngLat)
-          .setHTML(`
-            <div style="font-weight:700">${p.name}</div>
-            <div class="mute">${p.full_name}</div>
-            <div style="margin-top:4px"><span class="pill">${p.subcategory}</span> • <span class="pill">${p.semester}</span></div>
-            <div style="margin-top:6px"><b>Location:</b> ${p.location}</div>
-            <div><b>Dates:</b> ${p.start} &rarr; ${p.end}</div>
-          `)
-          .addTo(map);
-      });
-
-      map.on('mouseenter', 'conferences-layer', () => map.getCanvas().style.cursor = 'pointer');
-      map.on('mouseleave', 'conferences-layer', () => map.getCanvas().style.cursor = '');
-
-      // Build sidebar filters dynamically
       buildSidebar();
-      applyFilters(); // initial filter (all on)
+      applyFilters(); // initial state → no pins/cards
     });
 
-    // -----------------------------
-    // Sidebar & Filtering
-    // -----------------------------
-    const filtersRoot = document.getElementById('filters');
+    map.on('click', 'conferences-layer', (e) => {
+  const f = e.features[0];
+  const p = f.properties;
 
-    function groupBySemesterAndSub(dataFeatures) {
-      const bySem = {};
-      for (const f of dataFeatures) {
-        const sem = f.properties.semester;
-        const sub = f.properties.subcategory;
-        if (!bySem[sem]) bySem[sem] = new Set();
+  // Close existing popup + clear selection
+  if (activePopup) activePopup.remove();
+  if (activeCard) activeCard.classList.remove('selected');
+
+  // Find matching card by name
+  const card = [...document.querySelectorAll('.card')]
+    .find(c => c.querySelector('.card-title').textContent === p.name);
+
+  if (card) {
+    card.classList.add('selected');
+    activeCard = card;
+
+    // 🔹 Smooth scroll sidebar to bring the card into view
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // Create popup
+  const popup = new mapboxgl.Popup()
+    .setLngLat(f.geometry.coordinates)
+    .setHTML(`<div style="font-weight:700">${p.name}</div>
+              <div>${p.full_name}</div>
+              <div><b>${p.location}</b></div>
+              <div>${p.start} → ${p.end}</div>`)
+    .addTo(map);
+
+  activePopup = popup;
+
+  // When popup is closed → clear selection
+  popup.on('close', () => {
+    if (activeCard) activeCard.classList.remove('selected');
+    activeCard = null;
+    activePopup = null;
+  });
+});
+
+    const filtersRoot=document.getElementById('filters');
+    const cardsRoot=document.getElementById('cards');
+
+    function groupBySemesterAndSub(dataFeatures){
+      const bySem={};
+      for(const f of dataFeatures){
+        const sem=f.properties.semester, sub=f.properties.subcategory;
+        if(!bySem[sem]) bySem[sem]=new Set();
         bySem[sem].add(sub);
       }
-      // convert sets to arrays and sort
-      const res = {};
-      for (const sem of Object.keys(bySem)) res[sem] = [...bySem[sem]].sort();
+      const res={}; for(const sem of Object.keys(bySem)) res[sem]=[...bySem[sem]].sort();
       return res;
     }
+    function colorDot(c){return `<span class="dot" style="background:${c}"></span>`;}
 
-    function colorDot(color) { return `<span class="dot" style="background:${color}"></span>`; }
+    function buildSidebar(){
+      const grouped=groupBySemesterAndSub(features);
+      const wrapper=document.createElement('div');
+      Object.keys(grouped).sort().forEach(sem=>{
+        const box=document.createElement('div'); box.className='semester';
+        const titleRow=document.createElement('label'); titleRow.className='checkbox-row section-title';
+        const semId=`sem-${sem.replace(/\s+/g,'-')}`;
+        titleRow.innerHTML=`<input type="checkbox" data-semester-master="${sem}"> ${sem}`;
+        box.appendChild(titleRow);
+        grouped[sem].forEach(sub=>{
+          const id=`sub-${sem}-${sub}`;
+          const row=document.createElement('label'); row.className='checkbox-row';
+          row.innerHTML=`<input type="checkbox" data-semester="${sem}" data-sub="${sub}"> ${colorDot(subColor[sub])} ${sub}`;
+          box.appendChild(row);
+        });
+        wrapper.appendChild(box);
+      });
+      filtersRoot.innerHTML=''; filtersRoot.appendChild(wrapper);
 
-      function buildSidebar() {
-    const grouped = groupBySemesterAndSub(features);
-    const allSemesters = Object.keys(grouped).sort(); // ["I semester", "II semester"]
-
-    const wrapper = document.createElement('div');
-
-    allSemesters.forEach(sem => {
-      const box = document.createElement('div');
-      box.className = 'semester';
-
-      // Semester title with master checkbox
-      const titleRow = document.createElement('label');
-      titleRow.className = 'checkbox-row section-title';
-      const semId = `sem-${sem.replace(/\s+/g,'-')}`;
-      titleRow.innerHTML = `<input type="checkbox" id="${semId}" data-semester-master="${sem}"> ${sem}`;
-      box.appendChild(titleRow);
-
-      // Subspecialty checkboxes
-      const subs = grouped[sem];
-      subs.forEach(sub => {
-        const color = subColor[sub] || '#ccc';
-        const id = `sub-${sem.replace(/\s+/g,'-')}-${sub.replace(/[^\w]+/g,'_')}`;
-        const row = document.createElement('label');
-        row.className = 'checkbox-row subspecialty-group';
-        row.innerHTML = `
-          <input type="checkbox" id="${id}" data-semester="${sem}" data-sub="${sub}">
-          ${colorDot(color)} ${sub}
-        `;
-        box.appendChild(row);
+      filtersRoot.addEventListener('change',e=>{
+        const t=e.target;
+        if(t.dataset.semesterMaster){
+          const sem=t.dataset.semesterMaster;
+          const subs=filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`);
+          subs.forEach(cb=>cb.checked=t.checked);
+          t.indeterminate=false;
+        }
+        if(t.dataset.sub){
+          const sem=t.dataset.semester;
+          const subs=[...filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`)];
+          const master=filtersRoot.querySelector(`input[data-semester-master="${sem}"]`);
+          const all=subs.every(cb=>cb.checked), none=subs.every(cb=>!cb.checked);
+          master.checked=all; master.indeterminate=!all && !none;
+        }
+        applyFilters();
       });
 
-      wrapper.appendChild(box);
-    });
-
-    // --- Clear All button at bottom ---
-    const clearBtn = document.createElement('button');
-    clearBtn.textContent = "Clear All";
-    clearBtn.style.cssText = `
-      display:block; margin-top:12px; padding:8px 12px; font-size:13px;
-      border:1px solid #ccc; border-radius:8px; background:#f9f9f9; cursor:pointer;
-    `;
-    clearBtn.addEventListener('click', () => {
-      filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb => {
-        cb.checked = false;
-        cb.indeterminate = false;
+      document.getElementById('clearAll').addEventListener('click',()=>{
+        filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb=>{cb.checked=false; cb.indeterminate=false;});
+        applyFilters();
       });
-      applyFilters();
-    });
-    wrapper.appendChild(clearBtn);
-
-    filtersRoot.innerHTML = '';
-    filtersRoot.appendChild(wrapper);
-
-    // --- Checkbox logic ---
-    filtersRoot.addEventListener('change', e => {
-      const target = e.target;
-
-      // Semester master clicked
-      if (target.dataset.semesterMaster) {
-        const sem = target.dataset.semesterMaster;
-        const subs = filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`);
-        subs.forEach(cb => cb.checked = target.checked);
-        target.indeterminate = false;
-      }
-
-      // Subspecialty clicked → update semester master
-      if (target.dataset.sub) {
-        const sem = target.dataset.semester;
-        const subs = [...filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`)];
-        const master = filtersRoot.querySelector(`input[data-semester-master="${sem}"]`);
-        const allChecked = subs.every(cb => cb.checked);
-        const noneChecked = subs.every(cb => !cb.checked);
-
-        master.checked = allChecked;
-        master.indeterminate = !allChecked && !noneChecked;
-      }
-
-      applyFilters();
-    });
-
-    // Search box listener
-    document.getElementById('searchInput').addEventListener('input', () => applyFilters());
-  }
-
-  // Filter logic (same as before: map empty until selection)
-  function applyFilters() {
-  // Gather checked subspecialties only (they’re the real filter)
-  const subChecked = [...filtersRoot.querySelectorAll('input[data-sub]:checked')]
-    .map(i => i.dataset.sub);
-
-  // Nothing checked → show nothing
-  if (subChecked.length === 0) {
-    if (map.getLayer('conferences-layer')) {
-      map.setFilter('conferences-layer', ['==', ['get', 'subcategory'], '__none__']);
     }
-    return;
-  }
 
-  // Filter by checked subspecialties
-  const finalFilter = [
-    'in',
-    ['get', 'subcategory'],
-    ['literal', subChecked]
-  ];
+    function applyFilters(){
+      const subChecked=[...filtersRoot.querySelectorAll('input[data-sub]:checked')].map(i=>i.dataset.sub);
+      if(subChecked.length===0){
+        if(map.getLayer('conferences-layer')){
+          map.setFilter('conferences-layer',['==',['get','subcategory'],'__none__']);
+        }
+        cardsRoot.innerHTML=''; return;
+      }
+      const filter=['in',['get','subcategory'],['literal',subChecked]];
+      map.setFilter('conferences-layer',filter);
 
-  if (map.getLayer('conferences-layer')) {
-    map.setFilter('conferences-layer', finalFilter);
-  }
-}
+      // Build right-side cards
+      const bySub={};
+      features.forEach(f=>{
+        if(subChecked.includes(f.properties.subcategory)){
+          if(!bySub[f.properties.subcategory]) bySub[f.properties.subcategory]=[];
+          bySub[f.properties.subcategory].push(f);
+        }
+      });
+      cardsRoot.innerHTML='';
+      Object.keys(bySub).sort().forEach(sub=>{
+        const groupDiv=document.createElement('div'); groupDiv.className='card-group';
+        groupDiv.innerHTML=`<div class="card-group-title">${colorDot(subColor[sub])} ${sub}</div>`;
+        bySub[sub].forEach(f=>{
+          const p=f.properties;
+          const card=document.createElement('div'); card.className='card';
+          card.innerHTML=`<div class="card-title">${p.name}</div>
+                          <div class="card-sub">${p.location}</div>
+                          <div class="card-dates">${p.start} → ${p.end}</div>`;
+          card.addEventListener('click', () => {
+  // Close existing popup + clear selection
+  if (activePopup) activePopup.remove();
+  if (activeCard) activeCard.classList.remove('selected');
+
+  // Mark this card as selected
+  card.classList.add('selected');
+  activeCard = card;
+
+  // Create popup
+  const popup = new mapboxgl.Popup()
+    .setLngLat(f.geometry.coordinates)
+    .setHTML(`<div style="font-weight:700">${p.name}</div>
+              <div>${p.full_name}</div>
+              <div><b>${p.location}</b></div>
+              <div>${p.start} → ${p.end}</div>`)
+    .addTo(map);
+
+  activePopup = popup;
+
+  // When popup is closed → clear selection
+  popup.on('close', () => {
+    if (activeCard) activeCard.classList.remove('selected');
+    activeCard = null;
+    activePopup = null;
+  });
+});
+          groupDiv.appendChild(card);
+        });
+        cardsRoot.appendChild(groupDiv);
+      });
+    }
   </script>
 </body>
 </html>
