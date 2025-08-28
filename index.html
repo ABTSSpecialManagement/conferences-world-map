@@ -56,10 +56,34 @@
     #clear-btn:hover { background: #1E88BD; border: 1px solid #1E88BD; }
 
     .mapboxgl-popup, .mapboxgl-popup * { font-family: var(--font); }
+
+    /* Brand header in the left sidebar */
+#brand {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  padding:12px 8px 14px;
+  border-bottom:1px solid #eee;
+  margin-bottom:10px;
+}
+#brand .brand-logo {
+  width:48px; height:48px; object-fit:contain;
+}
+#brand .brand-name {
+  font-family: var(--font);
+  font-size:18px; font-weight:700; letter-spacing:.2px;
+}
+
   </style>
 </head>
 <body>
   <div id="menu">
+    <div id="brand">
+  <!-- Replace "logo.png" with your real path or inline SVG -->
+  <img class="brand-logo" src="ABTSx4.png" alt="Logo">
+  <div class="brand-name">Conferences Map</div>
+</div>
     <div class="section-title">Filters</div>
     <div id="filters"></div>
     <button id="clear-btn">Clear All</button>
