@@ -79,12 +79,13 @@
   </div>
 
   <script>
-    // ✅ your original token restored
+    // Token
     mapboxgl.accessToken = 'pk.eyJ1IjoibWFqYS1wYXZsaWNpYyIsImEiOiJjbWVpYnloeWowMG5xMmtzOGdnN2tjempnIn0.2LRD1_4AAyAVQWZ9kTZa2A';
 
     let activePopup = null;
     let activeCard = null;
 
+    // City dictionary
     const cityCoords = {
       "San Francisco": [-122.4194, 37.7749],
       "Edinburgh": [-3.1883, 55.9533],
@@ -163,6 +164,7 @@
       "#2b908f","#ff7f0e","#1f77b4","#2ca02c","#d62728","#9467bd"
     ];
 
+    // Map init (single colorful style)
     const map = new mapboxgl.Map({
       container:'map',
       style:'mapbox://styles/mapbox/streets-v12',
@@ -186,55 +188,15 @@
         distinctSubs = [...new Set(features.map(f => f.properties.subcategory))].sort();
         subColor = {}; distinctSubs.forEach((s,i)=> subColor[s] = palette[i % palette.length]);
 
-        // ✅ If map already loaded, init now; else wait for 'load'
         if (map.loaded()) initLayersAndUI();
         else map.once('load', initLayersAndUI);
       })
       .catch(err => {
         console.error('Failed to load JSON', err);
-        alert('Could not load conferences_2026.json. Make sure you are serving this file over HTTP (not file://) and that the path is correct.');
+        alert('Could not load conferences_2026.json. Serve via http and check the path.');
       });
 
-    function jsonToFeatures(rows){
-      const feats = [];
-      for (const r of rows){
-        const sem = (r.semester || '').trim();
-        const semesterLabel = sem === 'I' ? 'I semester' : (sem === 'II' ? 'II semester' : sem);
-        const sub = r.subspecialty || r.sub || 'Other';
-        const name = r.short_name || r.name || '(TBA)';
-        const full = r.full_name || '';
-        const cityRaw = normalizeCity(r.location_raw || r.city || '');
-        const start = normalizeDate(r.start_date || r.start);
-        const end   = normalizeDate(r.end_date   || r.end);
-        const link  = r.link || '';
-        let coords = null;
-
-        if (Number.isFinite(r.lon) && Number.isFinite(r.lat)) {
-          coords = [r.lon, r.lat];
-        } else if (cityRaw && cityCoords[cityRaw]) {
-          coords = cityCoords[cityRaw];
-        }
-
-        if (!coords) continue;
-
-        feats.push({
-          type:'Feature',
-          properties:{
-            semester: semesterLabel,
-            subcategory: sub,
-            name: name,
-            full_name: full,
-            location: cityRaw,
-            start: start || 'TBA',
-            end: end || 'TBA',
-            link: link || ''
-          },
-          geometry:{ type:'Point', coordinates: coords }
-        });
-      }
-      return feats;
-    }
-
+    // --- Helpers: date + semester ---
     function normalizeDate(s){
       if (!s) return null;
       const iso = /^\d{4}-\d{2}-\d{2}$/;
@@ -248,6 +210,55 @@
         }
       }catch(e){}
       return s;
+    }
+    function monthFromDateStr(s){
+      if (!s) return null;
+      const d = new Date(s);
+      if (isNaN(d)) return null;
+      return d.getUTCMonth()+1; // 1..12
+    }
+    function computeSemester(start, end){
+      const m = monthFromDateStr(start) ?? monthFromDateStr(end);
+      if (!m) return 'Unknown semester';
+      return (m >= 1 && m <= 6) ? 'I semester' : 'II semester';
+    }
+
+    // Convert JSON rows to GeoJSON features (semester computed from dates)
+    function jsonToFeatures(rows){
+      const feats = [];
+      for (const r of rows){
+        const sub  = r.subspecialty || r.sub || 'Other';
+        const name = r.short_name || r.name || '(TBA)';
+        const full = r.full_name || '';
+        const cityRaw = normalizeCity(r.location_raw || r.city || '');
+        const start = normalizeDate(r.start_date || r.start);
+        const end   = normalizeDate(r.end_date   || r.end);
+        const link  = r.link || '';
+
+        const semesterLabel = computeSemester(start, end);
+
+        let coords = null;
+        if (Number.isFinite(r.lon) && Number.isFinite(r.lat)) {
+          coords = [r.lon, r.lat];
+        } else if (cityRaw && cityCoords[cityRaw]) {
+          coords = cityCoords[cityRaw];
+        }
+        if (!coords) continue;
+
+        feats.push({
+          type:'Feature',
+          properties:{
+            semester: semesterLabel,
+            subcategory: sub,
+            name, full_name: full, location: cityRaw,
+            start: start || 'TBA',
+            end: end || 'TBA',
+            link
+          },
+          geometry:{ type:'Point', coordinates: coords }
+        });
+      }
+      return feats;
     }
 
     function initLayersAndUI(){
@@ -269,7 +280,7 @@
       });
 
       buildSidebar();
-      applyFilters(); // start with nothing shown until user checks boxes
+      applyFilters(); // nothing selected initially
 
       map.on('click','conferences-layer',(e)=>{
         const f = e.features[0], p = f.properties;
@@ -277,16 +288,14 @@
       });
 
       document.getElementById('view-toggle').addEventListener('change', (e) => {
-        const input = e.target.closest('input');
-        if (!input) return;
-
+        const input = e.target.closest('input'); if (!input) return;
         if (input.value === '2d') {
           map.setProjection('mercator');
           map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
           map.setFog(null);
         } else if (input.value === '3d') {
           map.setProjection('globe');
-          map.setFog({}); // optional subtle atmosphere
+          map.setFog({});
         }
       });
     }
@@ -296,31 +305,26 @@
       if (activeCard) activeCard.classList.remove('selected');
 
       const card = [...document.querySelectorAll('.card')]
-        .find(c => c.dataset.name === props.name);
+        .find(c => c.dataset.name === props.name && c.dataset.semester === props.semester);
       if (card) {
         card.classList.add('selected');
         activeCard = card;
         card.scrollIntoView({ behavior:'smooth', block:'center' });
       }
 
-     const viewMode = document.querySelector('input[name="mapview"]:checked').value;
-if (viewMode === '3d') {
-  map.easeTo({
-    center: feature.geometry.coordinates,
-    zoom: map.getZoom(),        // ← keep current zoom (no zoom-in)
-    pitch: map.getPitch(),      // ← keep current pitch
-    bearing: map.getBearing(),  // ← keep current bearing (just turn to center)
-    duration: 1500,
-    essential: true
-  });
-} else {
-  map.easeTo({
-    center: feature.geometry.coordinates,
-    duration: 800,
-    pitch: 0,
-    bearing: 0
-  });
-}
+      const viewMode = document.querySelector('input[name="mapview"]:checked').value;
+      if (viewMode === '3d') {
+        map.easeTo({
+          center: feature.geometry.coordinates,
+          zoom: map.getZoom(),          // keep current zoom (only rotate)
+          pitch: map.getPitch(),
+          bearing: map.getBearing(),
+          duration: 1500,
+          essential: true
+        });
+      } else {
+        map.easeTo({ center: feature.geometry.coordinates, duration: 800, pitch: 0, bearing: 0 });
+      }
 
       const linkHTML = props.link ? `<div style="margin-top:6px"><a href="${props.link}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">Open website ↗</a></div>` : '';
       const popup = new mapboxgl.Popup()
@@ -341,12 +345,12 @@ if (viewMode === '3d') {
       });
     }
 
+    // Sidebar
     function groupBySemesterAndSub(dataFeatures){
       const bySem = {};
       for (const f of dataFeatures){
         const sem = f.properties.semester, sub = f.properties.subcategory;
-        if (!bySem[sem]) bySem[sem] = new Set();
-        bySem[sem].add(sub);
+        (bySem[sem] ||= new Set()).add(sub);
       }
       const res = {};
       for (const sem of Object.keys(bySem)) res[sem] = [...bySem[sem]].sort();
@@ -366,6 +370,7 @@ if (viewMode === '3d') {
 
         grouped[sem].forEach(sub=>{
           const row=document.createElement('label'); row.className='checkbox-row';
+          // keep semester on each input so filtering can match the pair
           row.innerHTML=`<input type="checkbox" data-semester="${sem}" data-sub="${sub}"> ${colorDot(subColor[sub])} ${sub}`;
           box.appendChild(row);
         });
@@ -383,7 +388,7 @@ if (viewMode === '3d') {
         }
         if (t.dataset.sub){
           const sem=t.dataset.semester;
-          const subs=[...filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`)];
+          const subs=[...filtersRoot.querySelectorAll(`input[data-semester="${sem}"][data-sub]`)];
           const master=filtersRoot.querySelector(`input[data-semester-master="${sem}"]`);
           const all=subs.every(cb=>cb.checked), none=subs.every(cb=>!cb.checked);
           master.checked=all; master.indeterminate=!all && !none;
@@ -399,38 +404,52 @@ if (viewMode === '3d') {
       });
     }
 
+    // Apply filters using (semester, sub) PAIRS
     function applyFilters(){
-      const subChecked=[...filtersRoot.querySelectorAll('input[data-sub]:checked')].map(i=>i.dataset.sub);
+      const checkedPairs = [...filtersRoot.querySelectorAll('input[data-sub]:checked')]
+        .map(i => ({ sem: i.dataset.semester, sub: i.dataset.sub }));
 
-      if (subChecked.length===0){
+      if (checkedPairs.length===0){
         if (map.getLayer('conferences-layer')){
           map.setFilter('conferences-layer',['==',['get','subcategory'],'__none__']);
         }
         cardsRoot.innerHTML=''; return;
       }
 
-      const filter=['in',['get','subcategory'],['literal',subChecked]];
+      // Mapbox filter: OR of AND(semester==X, sub==Y)
+      const filter = ['any'];
+      checkedPairs.forEach(p => {
+        filter.push(['all',
+          ['==', ['get','semester'], p.sem],
+          ['==', ['get','subcategory'], p.sub]
+        ]);
+      });
       map.setFilter('conferences-layer', filter);
 
-      const bySub = {};
+      // Build cards from the same pair set
+      const byGroup = {}; // key = `${sem} — ${sub}` to keep semesters distinct if both selected
       features.forEach(f=>{
-        if (subChecked.includes(f.properties.subcategory)){
-          (bySub[f.properties.subcategory] ||= []).push(f);
+        const sem = f.properties.semester, sub = f.properties.subcategory;
+        if (checkedPairs.some(p => p.sem===sem && p.sub===sub)) {
+          const key = `${sem} — ${sub}`;
+          (byGroup[key] ||= []).push(f);
         }
       });
 
       const parse = (s)=> Date.parse(s) || Infinity;
-      Object.values(bySub).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
+      Object.values(byGroup).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
 
       cardsRoot.innerHTML='';
-      Object.keys(bySub).sort().forEach(sub=>{
+      Object.keys(byGroup).sort().forEach(groupKey=>{
+        const [semLabel, subLabel] = groupKey.split(' — ');
         const groupDiv=document.createElement('div'); groupDiv.className='card-group';
-        groupDiv.innerHTML=`<div class="card-group-title">${colorDot(subColor[sub])} ${sub}</div>`;
+        groupDiv.innerHTML=`<div class="card-group-title">${colorDot(subColor[subLabel]||'#ccc')} ${semLabel} · ${subLabel}</div>`;
 
-        bySub[sub].forEach(f=>{
+        byGroup[groupKey].forEach(f=>{
           const p=f.properties;
           const card=document.createElement('div'); card.className='card';
           card.dataset.name = p.name;
+          card.dataset.semester = p.semester;
           card.innerHTML=`
             <div class="card-title">${p.name}</div>
             <div class="card-sub">${p.location}</div>
