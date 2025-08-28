@@ -7,9 +7,9 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    :root { --sidebar-w: 320px; --right-w: 380px; }
+    :root { --sidebar-w: 320px; --right-w: 380px; --font: "Century Gothic", CenturyGothic, AppleGothic, sans-serif; }
     * { box-sizing: border-box; }
-    body { margin:0; font-family: system-ui, sans-serif; }
+    body { margin:0; font-family: var(--font); }
     #map { position: absolute; top:0; bottom:0; left: var(--sidebar-w); right: var(--right-w); }
     #menu {
       position: absolute; top:0; left:0; bottom:0;
@@ -26,9 +26,8 @@
     .checkbox-row { display:flex; align-items:center; gap:8px; font-size:14px; padding:4px 2px; border-radius:8px; }
     .checkbox-row:hover { background:#f7f7f7; }
     .dot { width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,.15); }
-    button.clear { display:block; margin-top:12px; padding:8px 12px; font-size:13px;
-      border:1px solid #ccc; border-radius:8px; background:#f9f9f9; cursor:pointer; }
 
+    /* Cards */
     .card-group { margin-bottom:16px; }
     .card-group-title { font-size:13px; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
     .card {
@@ -43,20 +42,31 @@
     .card-dates { font-size:12px; color:#444; margin-top:4px; }
     .card-link { display:inline-block; font-size:12px; margin-top:6px; text-decoration:underline; }
 
-    /* map view toggle */
+    /* Map view toggle */
     #view-toggle {
       display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:8px 10px;
       background:#fff; border:1px solid #e6e6e6; border-radius:10px;
     }
     #view-toggle label { font-size:13px; display:flex; align-items:center; gap:6px; }
     #view-toggle input { accent-color:#4a90e2; }
+
+    /* New Clear button */
+    #clear-btn {
+      font-family: var(--font) !important;
+      color:#fff; margin-top: 20px; padding: 10px 10px; font-size: 16px;
+      border: 1px solid #2B7DA6; border-radius: 6px; background: #2B7DA6; cursor: pointer;
+    }
+    #clear-btn:hover { background: #1E88BD; border: 1px solid #1E88BD; }
+
+    /* Make Mapbox popups inherit the font */
+    .mapboxgl-popup, .mapboxgl-popup * { font-family: var(--font); }
   </style>
 </head>
 <body>
   <div id="menu">
     <div class="section-title">Filters</div>
     <div id="filters"></div>
-    <button class="clear" id="clearAll">Clear All</button>
+    <button id="clear-btn">Clear All</button>
   </div>
 
   <div id="map"></div>
@@ -73,12 +83,13 @@
   </div>
 
   <script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoibWFqYS1wYXZsaWNpYyIsImEiOiJjbWVpYnloeWowMG5xMmtzOGdnN2tjempnIn0.2LRD1_4AAyAVQWZ9kTZa2A';
+    // Mapbox token
+    mapboxgl.accessToken = 'pk.eyJ1IjoibWFqYS1wYXZsaWNpY2MiLCJhIjoiY21laWJ5aGh6MDBucTJrczhnZzdrY3pqZyJ9.2LRD1_4AAyAVQWZ9kTZa2A';
 
     let activePopup = null;
     let activeCard = null;
 
-    // --- City dictionary (fixes typos/variants) ---
+    // City dictionary
     const cityCoords = {
       "San Francisco": [-122.4194, 37.7749],
       "Edinburgh": [-3.1883, 55.9533],
@@ -126,7 +137,7 @@
       "Lugano": [8.9511, 46.0037],
       "Lille": [3.0573, 50.6292],
       "Geneva": [6.1432, 46.2044],
-      "Queensland": [153.0251, -27.4698], // Brisbane
+      "Queensland": [153.0251, -27.4698],
       "Marseilles": [5.3698, 43.2965],
       "Marseille": [5.3698, 43.2965],
       "Seoul": [126.9780, 37.5665],
@@ -137,7 +148,7 @@
       "Las Vegas": [-115.1398, 36.1699],
       "Atlanta": [-84.3880, 33.7490],
       "Boston": [-71.0589, 42.3601],
-      "San Diego County": [-117.1611, 32.7157] // safety
+      "San Diego County": [-117.1611, 32.7157]
     };
 
     const normalizeCity = (s) => {
@@ -150,7 +161,7 @@
         .trim();
     };
 
-    // color palette
+    // palette for subspecialties
     const palette = [
       "#e6194b","#3cb44b","#ffe119","#4363d8","#f58231","#911eb4","#46f0f0","#f032e6",
       "#bcf60c","#fabebe","#008080","#e6beff","#9a6324","#fffac8","#800000","#aaffc3",
@@ -158,7 +169,7 @@
       "#2b908f","#ff7f0e","#1f77b4","#2ca02c","#d62728","#9467bd"
     ];
 
-    // Build map
+    // Map init (single colorful style)
     const map = new mapboxgl.Map({
       container:'map',
       style:'mapbox://styles/mapbox/streets-v12',
@@ -174,14 +185,13 @@
     const filtersRoot = document.getElementById('filters');
     const cardsRoot   = document.getElementById('cards');
 
-    // -------- Data loading from JSON --------
+    // Load data from JSON
     fetch('conferences_2026.json')
       .then(r => r.json())
       .then(json => {
         features = jsonToFeatures(json);
         distinctSubs = [...new Set(features.map(f => f.properties.subcategory))].sort();
         subColor = {}; distinctSubs.forEach((s,i)=> subColor[s] = palette[i % palette.length]);
-
         map.once('load', initLayersAndUI);
       })
       .catch(err => {
@@ -189,11 +199,10 @@
         alert('Could not load conferences_2026.json');
       });
 
-    // Convert your JSON rows into GeoJSON features
     function jsonToFeatures(rows){
       const feats = [];
       for (const r of rows){
-        const sem = (r.semester || '').trim();                 // "I" | "II"
+        const sem = (r.semester || '').trim(); // "I" | "II"
         const semesterLabel = sem === 'I' ? 'I semester' : (sem === 'II' ? 'II semester' : sem);
         const sub = r.subspecialty || r.sub || 'Other';
         const name = r.short_name || r.name || '(TBA)';
@@ -204,14 +213,13 @@
         const link  = r.link || '';
         let coords = null;
 
-        // Prefer explicit lat/lon if provided
         if (Number.isFinite(r.lon) && Number.isFinite(r.lat)) {
           coords = [r.lon, r.lat];
         } else if (cityRaw && cityCoords[cityRaw]) {
           coords = cityCoords[cityRaw];
         }
 
-        if (!coords) continue; // skip rows we can't place
+        if (!coords) continue;
 
         feats.push({
           type:'Feature',
@@ -233,7 +241,6 @@
 
     function normalizeDate(s){
       if (!s) return null;
-      // accept "YYYY-MM-DD" or "M/D/YYYY"
       const iso = /^\d{4}-\d{2}-\d{2}$/;
       const us  = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
       try{
@@ -244,7 +251,7 @@
           return `${y}-${mm}-${dd}`;
         }
       }catch(e){}
-      return s; // leave as-is if already friendly
+      return s;
     }
 
     function initLayersAndUI(){
@@ -265,37 +272,32 @@
       buildSidebar();
       applyFilters(); // start with nothing shown until user checks boxes
 
-      // pin -> popup + select matching card
+      // Pin click
       map.on('click','conferences-layer',(e)=>{
         const f = e.features[0], p = f.properties;
         openPopupAndSelectCard(f, p);
       });
 
-      // map view toggle
+      // Map view toggle — only switch projection (style stays the same)
       document.getElementById('view-toggle').addEventListener('change', (e) => {
-        const val = (e.target.closest('input') || {}).value;
-        if (!val) return;
-        if (val === '2d') {
+        const input = e.target.closest('input');
+        if (!input) return;
+
+        if (input.value === '2d') {
           map.setProjection('mercator');
-          map.setStyle('mapbox://styles/mapbox/streets-v12');
-          map.once('styledata', ()=> map.setPaintProperty('conferences-layer','circle-color', matchColor));
-        } else if (val === '3d') {
+          map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
+          map.setFog(null);
+        } else if (input.value === '3d') {
           map.setProjection('globe');
-          map.setStyle('mapbox://styles/mapbox/light-v11');
-          map.once('styledata', ()=>{
-            map.setPaintProperty('conferences-layer','circle-color', matchColor);
-            if (map.getFog()) map.setFog({}); else map.setFog({});
-          });
+          map.setFog({}); // optional subtle atmosphere
         }
       });
     }
 
     function openPopupAndSelectCard(feature, props){
-      // close existing
       if (activePopup) activePopup.remove();
       if (activeCard) activeCard.classList.remove('selected');
 
-      // select card
       const card = [...document.querySelectorAll('.card')]
         .find(c => c.dataset.name === props.name);
       if (card) {
@@ -304,7 +306,6 @@
         card.scrollIntoView({ behavior:'smooth', block:'center' });
       }
 
-      // animate on globe: turn the world to the point
       const viewMode = document.querySelector('input[name="mapview"]:checked').value;
       if (viewMode === '3d') {
         map.easeTo({
@@ -313,9 +314,15 @@
           duration: 1500,
           pitch: 45
         });
+      } else {
+        map.easeTo({
+          center: feature.geometry.coordinates,
+          duration: 800,
+          pitch: 0,
+          bearing: 0
+        });
       }
 
-      // popup HTML (with link if present)
       const linkHTML = props.link ? `<div style="margin-top:6px"><a href="${props.link}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">Open website ↗</a></div>` : '';
       const popup = new mapboxgl.Popup()
         .setLngLat(feature.geometry.coordinates)
@@ -335,7 +342,7 @@
       });
     }
 
-    // -------- Sidebar (filters) --------
+    // Sidebar builders
     function groupBySemesterAndSub(dataFeatures){
       const bySem = {};
       for (const f of dataFeatures){
@@ -386,13 +393,15 @@
         applyFilters();
       });
 
-      document.getElementById('clearAll').addEventListener('click', ()=>{
-        filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb=>{cb.checked=false; cb.indeterminate=false;});
+      // Clear all (new id)
+      document.getElementById('clear-btn').addEventListener('click',()=>{
+        filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+          cb.checked=false; cb.indeterminate=false;
+        });
         applyFilters();
       });
     }
 
-    // -------- Filtering + cards (with links) --------
     function applyFilters(){
       const subChecked=[...filtersRoot.querySelectorAll('input[data-sub]:checked')].map(i=>i.dataset.sub);
 
@@ -406,7 +415,6 @@
       const filter=['in',['get','subcategory'],['literal',subChecked]];
       map.setFilter('conferences-layer', filter);
 
-      // group features by subcategory
       const bySub = {};
       features.forEach(f=>{
         if (subChecked.includes(f.properties.subcategory)){
@@ -414,11 +422,9 @@
         }
       });
 
-      // sort inside each sub by start date (if parseable)
       const parse = (s)=> Date.parse(s) || Infinity;
       Object.values(bySub).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
 
-      // build cards
       cardsRoot.innerHTML='';
       Object.keys(bySub).sort().forEach(sub=>{
         const groupDiv=document.createElement('div'); groupDiv.className='card-group';
