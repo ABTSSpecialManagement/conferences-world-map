@@ -75,7 +75,8 @@
     #topbar .tb-title { font-weight:700; letter-spacing:.2px; }
     #topbar .tb-btn {
       appearance: none; border:1px solid #d6d6d6; background:#fff; padding:6px 10px; border-radius:8px;
-      font-size:14px; line-height:1; cursor:pointer;
+      font-size:14px; line-height:1; cursor:pointer; min-width:84px; text-align:center;
+      transition: transform .05s ease;
     }
     #topbar .tb-btn:active { transform: translateY(1px); }
 
@@ -363,7 +364,7 @@
         }
       });
 
-      // ---- Mobile drawers (filters & selected) ----
+      // ---- Mobile drawers (filters & selected) with ✕ toggles ----
       const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
       const topbarFiltersBtn = document.getElementById('btn-filters');
       const topbarCardsBtn   = document.getElementById('btn-cards');
@@ -371,25 +372,43 @@
       const menuEl           = document.getElementById('menu');
       const cardsEl          = document.getElementById('cards-panel');
 
+      let openDrawerName = null; // 'filters' | 'cards' | null
+
+      function setTopbarUI(){
+        topbarFiltersBtn.textContent = (openDrawerName === 'filters') ? '✕' : 'Filters';
+        topbarCardsBtn.textContent   = (openDrawerName === 'cards')   ? '✕' : 'Selected';
+        topbarFiltersBtn.setAttribute('aria-expanded', openDrawerName === 'filters');
+        topbarCardsBtn.setAttribute('aria-expanded',   openDrawerName === 'cards');
+      }
+
       function openDrawer(which){
         if (!isMobile()) return;
-        if (which === 'filters') {
-          menuEl.classList.add('open');
-          topbarFiltersBtn.setAttribute('aria-expanded','true');
-        } else {
-          cardsEl.classList.add('open');
-          topbarCardsBtn.setAttribute('aria-expanded','true');
+        if (openDrawerName === which) { // toggle close if same button
+          closeDrawers();
+          return;
         }
+        // Close any existing drawer first
+        if (openDrawerName) {
+          if (openDrawerName === 'filters') menuEl.classList.remove('open');
+          if (openDrawerName === 'cards')   cardsEl.classList.remove('open');
+        }
+        // Open requested
+        if (which === 'filters') menuEl.classList.add('open');
+        if (which === 'cards')   cardsEl.classList.add('open');
+
+        openDrawerName = which;
         scrim.classList.add('show');
         document.body.style.overflow='hidden';
+        setTopbarUI();
       }
+
       function closeDrawers(){
-        menuEl.classList.remove('open');
-        cardsEl.classList.remove('open');
-        topbarFiltersBtn.setAttribute('aria-expanded','false');
-        topbarCardsBtn.setAttribute('aria-expanded','false');
+        if (openDrawerName === 'filters') menuEl.classList.remove('open');
+        if (openDrawerName === 'cards')   cardsEl.classList.remove('open');
+        openDrawerName = null;
         scrim.classList.remove('show');
         document.body.style.overflow='';
+        setTopbarUI();
       }
 
       topbarFiltersBtn.addEventListener('click', ()=> openDrawer('filters'));
@@ -397,8 +416,11 @@
       scrim.addEventListener('click', closeDrawers);
       window.addEventListener('resize', ()=> { if (!isMobile()) closeDrawers(); });
 
-      // make available to other functions:
-      window.__maybeCloseForMobile = function(){ if (isMobile()) closeDrawers(); };
+      // expose to other functions (e.g., after selecting a card)
+      window.__closeDrawersIfMobile = function(){
+        if (isMobile() && openDrawerName) closeDrawers();
+      };
+      setTopbarUI();
     }
 
     function openPopupAndSelectCard(feature, props){
@@ -445,8 +467,8 @@
         activeCard = null; activePopup = null;
       });
 
-      // close drawers on mobile so map is visible
-      if (window.__maybeCloseForMobile) window.__maybeCloseForMobile();
+      // close any open drawer on mobile after selecting
+      if (window.__closeDrawersIfMobile) window.__closeDrawersIfMobile();
     }
 
     // Sidebar
