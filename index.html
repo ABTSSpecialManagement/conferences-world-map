@@ -7,7 +7,7 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    :root { --sidebar-w: 320px; --right-w: 360px; }
+    :root { --sidebar-w: 320px; --right-w: 380px; }
     * { box-sizing: border-box; }
     body { margin:0; font-family: system-ui, sans-serif; }
     #map { position: absolute; top:0; bottom:0; left: var(--sidebar-w); right: var(--right-w); }
@@ -16,7 +16,7 @@
       width: var(--sidebar-w); overflow:auto; background:#fff;
       padding:16px 14px; border-right:1px solid #e6e6e6;
     }
-    #cards-panel {             /* NEW right panel */
+    #cards-panel {
       position: absolute; top:0; right:0; bottom:0;
       width: var(--right-w); overflow:auto; background:#fafafa;
       border-left:1px solid #e6e6e6; padding:16px 14px;
@@ -28,32 +28,28 @@
     .dot { width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,.15); }
     button.clear { display:block; margin-top:12px; padding:8px 12px; font-size:13px;
       border:1px solid #ccc; border-radius:8px; background:#f9f9f9; cursor:pointer; }
+
     .card-group { margin-bottom:16px; }
     .card-group-title { font-size:13px; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
-    .card { background:white; border:1px solid #ddd; border-radius:10px; padding:10px 12px; margin-bottom:8px;
-      box-shadow:0 1px 2px rgba(0,0,0,0.05); cursor:pointer; }
+    .card {
+      background:white; border:1px solid #ddd; border-radius:10px;
+      padding:10px 12px; margin-bottom:8px; box-shadow:0 1px 2px rgba(0,0,0,0.05);
+      cursor:pointer; transition: background 0.2s, border-color 0.2s;
+    }
+    .card:hover { background:#f2f7ff; border-color:#aac8ff; }
+    .card.selected { background:#e6f0ff; border-color:#4a90e2; box-shadow:0 0 0 2px rgba(74,144,226,0.4); }
     .card-title { font-size:14px; font-weight:600; }
     .card-sub { font-size:13px; color:#666; }
     .card-dates { font-size:12px; color:#444; margin-top:4px; }
-    .card {
-  background:white;
-  border:1px solid #ddd;
-  border-radius:10px;
-  padding:10px 12px;
-  margin-bottom:8px;
-  box-shadow:0 1px 2px rgba(0,0,0,0.05);
-  cursor:pointer;
-  transition: background 0.2s, border-color 0.2s;
-}
-.card:hover {
-  background:#f2f7ff;          /* soft blue tint */
-  border-color:#aac8ff;
-}
-.card.selected {               /* clicked/active */
-  background:#e6f0ff;
-  border-color:#4a90e2;
-  box-shadow:0 0 0 2px rgba(74,144,226,0.4);
-}
+    .card-link { display:inline-block; font-size:12px; margin-top:6px; text-decoration:underline; }
+
+    /* map view toggle */
+    #view-toggle {
+      display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:8px 10px;
+      background:#fff; border:1px solid #e6e6e6; border-radius:10px;
+    }
+    #view-toggle label { font-size:13px; display:flex; align-items:center; gap:6px; }
+    #view-toggle input { accent-color:#4a90e2; }
   </style>
 </head>
 <body>
@@ -65,22 +61,24 @@
 
   <div id="map"></div>
 
-  <!-- NEW Right panel -->
   <div id="cards-panel">
+    <div class="section-title">Map view</div>
+    <div id="view-toggle" role="group" aria-label="Map view">
+      <label><input type="radio" name="mapview" value="2d" checked> 2D (streets)</label>
+      <label><input type="radio" name="mapview" value="3d"> 3D globe</label>
+    </div>
+
     <div class="section-title">Selected Conferences</div>
     <div id="cards"></div>
   </div>
 
   <script>
-    // Mapbox token
     mapboxgl.accessToken = 'pk.eyJ1IjoibWFqYS1wYXZsaWNpYyIsImEiOiJjbWVpYnloeWowMG5xMmtzOGdnN2tjempnIn0.2LRD1_4AAyAVQWZ9kTZa2A';
-let activePopup = null;
-let activeCard = null;
 
-    // -----------------------------
-    // City → [lng, lat] dictionary
-    // (handles minor typos & variants)
-    // -----------------------------
+    let activePopup = null;
+    let activeCard = null;
+
+    // --- City dictionary (fixes typos/variants) ---
     const cityCoords = {
       "San Francisco": [-122.4194, 37.7749],
       "Edinburgh": [-3.1883, 55.9533],
@@ -91,7 +89,7 @@ let activeCard = null;
       "Stockholm": [18.0686, 59.3293],
       "Los Angeles": [-118.2437, 34.0522],
       "Copenhagen": [12.5683, 55.6761],
-      "Lisabon": [-9.1393, 38.7223], // treat as Lisbon
+      "Lisabon": [-9.1393, 38.7223],
       "Lisbon": [-9.1393, 38.7223],
       "Miami": [-80.1918, 25.7617],
       "Phoenix": [-112.0740, 33.4484],
@@ -128,18 +126,20 @@ let activeCard = null;
       "Lugano": [8.9511, 46.0037],
       "Lille": [3.0573, 50.6292],
       "Geneva": [6.1432, 46.2044],
-      "Queensland": [153.0251, -27.4698], // Brisbane (QLD capital)
-      "Marseilles": [5.3698, 43.2965], // treat as Marseille
+      "Queensland": [153.0251, -27.4698], // Brisbane
+      "Marseilles": [5.3698, 43.2965],
       "Marseille": [5.3698, 43.2965],
       "Seoul": [126.9780, 37.5665],
       "Hiroshima": [132.4553, 34.3853],
       "Vienna": [16.3738, 48.2082],
       "Thessaloniki": [22.9444, 40.6401],
       "Madrid": [-3.7038, 40.4168],
-      "Las Vegas": [-115.1398, 36.1699]
+      "Las Vegas": [-115.1398, 36.1699],
+      "Atlanta": [-84.3880, 33.7490],
+      "Boston": [-71.0589, 42.3601],
+      "San Diego County": [-117.1611, 32.7157] // safety
     };
 
-    // Normalize city strings
     const normalizeCity = (s) => {
       if (!s) return s;
       return s
@@ -150,121 +150,111 @@ let activeCard = null;
         .trim();
     };
 
-    // -----------------------------
-    // Raw records from Sheet 1
-    // (I + II semester)
-    // -----------------------------
-    const records = [
-      // I semester
-      {semester:'I semester', sub:'Oncology', name:'ASCO GI', full:'ASCO Gastrointestinal (GI) Cancers Symposium', city:'San Francisco', start:'1/8/2026', end:'1/10/2026'},
-      {semester:'I semester', sub:'Hepatology', name:'EASL-LCS', full:'EASL Liver Cancer Summit', city:'Edinburgh', start:'1/22/2026', end:'1/24/2026'},
-      {semester:'I semester', sub:'Hematology', name:'EAHAD', full:'European Association for Haemophilia and Allied Disorders', city:'Dublin', start:'2/3/2026', end:'2/6/2026'},
-      {semester:'I semester', sub:'Hematology', name:'ASTCT/CIBMTR', full:'American Society for Transplantation and Cellular Therapy /Center for International Blood and Marrow Transplant Research', city:'Salt Lake City', start:'2/4/2026', end:'2/7/2026'},
-      {semester:'I semester', sub:'Neurology', name:'ACTRIMS Forum', full:'Americas Committee for Treatment and Research in Multiple Sclerosis', city:'San Diego', start:'2/5/2026', end:'2/7/2026'},
-      {semester:'I semester', sub:'Ophthalmology', name:'APAO', full:'Asia-Pacific Academy of Ophthalmology', city:'Hong Kong', start:'2/5/2026', end:'2/8/2026'},
-      {semester:'I semester', sub:'Gastroenterology', name:'ECCO', full:'European Crohn’s and Colitis Organisation', city:'Stockholm', start:'2/18/2026', end:'2/21/2026'},
-      {semester:'I semester', sub:'Healthcare Innovation', name:'VIVE', full:'ViVE – The Healthcare Innovation Conference', city:'Los Angeles', start:'2/22/2026', end:'2/25/2026'},
-      {semester:'I semester', sub:'Oncology', name:'ASCO GU', full:'ASCO Genitourinary (GU) Cancers Symposium', city:'San Francisco', start:'2/26/2026', end:'2/28/2026'},
-      {semester:'I semester', sub:'Oncology', name:'ESGO', full:'European Society of Gynaecological Oncology', city:'Copenhagen', start:'2/26/2026', end:'2/28/2026'},
-      {semester:'I semester', sub:'Rheumatology', name:'SLEuro', full:'15th European Lupus Meeting', city:'Lisabon', start:'3/4/2026', end:'3/7/2026'},
-      {semester:'I semester', sub:'Oncology', name:'MBCC', full:'Miami Breast Cancer Conference', city:'Miami', start:'3/5/2026', end:'3/8/2026'},
-      {semester:'I semester', sub:'Oncology', name:'SSO', full:'Society of Surgical Oncology', city:'Phoenix', start:'3/5/2026', end:'3/7/2026'},
-      {semester:'I semester', sub:'Neurology', name:'MDA', full:'Muscular Dystrophy Association', city:'Orlando', start:'3/8/2026', end:'3/11/2026'},
-      {semester:'I semester', sub:'Neurology', name:'SMA Europe', full:'International Scientific Congress on Spinal Muscular Atrophy', city:'Budapest', start:'3/12/2026', end:'3/14/2026'},
-      {semester:'I semester', sub:'Urology', name:'EAU', full:'European Association of Urology', city:'London', start:'3/13/2026', end:'3/16/2026'},
-      {semester:'I semester', sub:'Neurology', name:'AD/PD', full:'Alzheimer\'s Disease & Parkinson\'s Disease International Conference.', city:'Chopenhagen', start:'3/17/2026', end:'3/21/2026'},
-      {semester:'I semester', sub:'Oncology', name:'ICHNO', full:'International Congress on Innovative Approaches in Head and Neck Oncology', city:'Seville', start:'3/19/2026', end:'3/21/2026'},
-      {semester:'I semester', sub:'Ophthalmology', name:'COPHy', full:'Congress on Controversies in Ophthalmology', city:'Krakow', start:'3/20/2026', end:'3/21/2026'},
-      {semester:'I semester', sub:'Pathology', name:'USCAP', full:'United States and Canadian Academy of Pathology', city:'San Antonio', start:'3/21/2026', end:'3/26/2026'},
-      {semester:'I semester', sub:'Hematology', name:'HOPA', full:'Hematology/Oncology Pharmacy Association', city:'New Orleans', start:'3/25/2026', end:'3/28/2026'},
-      {semester:'I semester', sub:'Psychiatry', name:'SIRS', full:'Schizophrenia International Research Society', city:'Florence', start:'3/25/2026', end:'3/29/2026'},
-      {semester:'I semester', sub:'Oncology', name:'ELCC', full:'European Lung Cancer Congress', city:'Copenhagen', start:'3/25/2026', end:'3/28/2026'},
-      {semester:'I semester', sub:'Dermatology', name:'AAD', full:'American Academy of Dermatology', city:'Denver', start:'3/27/2026', end:'3/31/2026'},
-      {semester:'I semester', sub:'Psychiatry', name:'EPA', full:'European Psychiatric Association', city:'Prague', start:'3/28/2026', end:'3/31/2026'},
-      {semester:'I semester', sub:'Perinatal Medicine', name:'ECPM', full:'European Congress of Perinatal Medicine', city:'Warsaw', start:'4/9/2026', end:'4/11/2026'},
-      {semester:'I semester', sub:'Oncology', name:'SGO', full:'Society of Gynecologic Oncology', city:'San Juan', start:'4/11/2026', end:'4/13/2026'},
-      {semester:'I semester', sub:'Cardiology', name:'SOCESP', full:'Society of Cardiology of the State of São Paulo', city:'São Paulo', start:'4/14/2026', end:'4/16/2026'},
-      {semester:'I semester', sub:'Hematology', name:'HFA', full:'Hemophilia Federation of America', city:'New Orleans', start:'4/16/2026', end:'4/19/2026'},
-      {semester:'I semester', sub:'Oncology', name:'EIKCS', full:'European International Kidney Cancer Symposium', city:'Paris', start:'4/16/2026', end:'4/18/2026'},
-      {semester:'I semester', sub:'Infectious Diseases', name:'ESCMID', full:'The European Society of Clinical Microbiology and Infectious Diseases', city:'Munich', start:'4/17/2026', end:'4/21/2026'},
-      {semester:'I semester', sub:'Oncology', name:'AACR', full:'American Association for Cancer Research', city:'San Diego', start:'4/17/2026', end:'4/22/2026'},
-      {semester:'I semester', sub:'Hematology', name:'WFH', full:'The World Federation of Hemophilia', city:'Kuala Lumpur', start:'4/19/2026', end:'4/22/2026'},
-      {semester:'I semester', sub:'Dermatology', name:'EADO', full:'European Association of Dermato-Oncology', city:'Prague', start:'4/23/2026', end:'4/25/2026'},
-      {semester:'I semester', sub:'Oncology', name:'ONS', full:'Oncology Nursing Society', city:'Washington, DC', start:'4/24/2026', end:'4/28/2026'},
-      {semester:'I semester', sub:'Cardiothoracic Transplantation', name:'ISHLT', full:'International Society for Heart and Lung Transplantation', city:'Toronto', start:'4/25/2026', end:'4/23/2026'},
-      {semester:'I semester', sub:'Obstetrics & Gynecology', name:'ACOG', full:'American College of Obstetricians and Gynecologists', city:'Washington', start:'5/1/2026', end:'5/3/2026'},
-      {semester:'I semester', sub:'Oncology', name:'ESMO BC', full:'ESMO Breast Cancer Congress', city:'Berlin', start:'5/6/2026', end:'5/8/2026'},
-      {semester:'I semester', sub:'Obesity / Metabolic Disorders', name:'ECO', full:'European Association for the Study of Obesity', city:'Istanbul, Turkey', start:'5/12/2026', end:'5/15/2026'},
-      {semester:'I semester', sub:'Pulmonology', name:'ATS', full:'American Thoracic Society', city:'Orlando', start:'5/15/2026', end:'5/20/2026'},
-      {semester:'I semester', sub:'Urology', name:'AUA', full:'American Urological Association', city:'Washington', start:'5/15/2026', end:'5/18/2026'},
-      {semester:'I semester', sub:'Hepatology', name:'EASL', full:'European Association for the Study of the Liver', city:'Barcelona', start:'5/27/2026', end:'5/30/2026'},
-      {semester:'I semester', sub:'Neurology', name:'CMSC', full:'Consortium of Multiple Sclerosis Centers', city:'Charlotte', start:'5/27/2026', end:'5/30/2026'},
-      {semester:'I semester', sub:'Oncology', name:'ASCO', full:'American Society of Clinical Oncology', city:'Chicago', start:'5/29/2026', end:'6/2/2026'},
-      {semester:'I semester', sub:'Rheumatology', name:'EULAR', full:'European Congress of Rheumatology', city:'London', start:'5/30/2026', end:'6/1/2026'},
-      {semester:'I semester', sub:'Nephrology', name:'ERA', full:'European Renal Association', city:'Glasgow', start:'6/3/2026', end:'6/6/2026'},
-      {semester:'I semester', sub:'Thoracic Surgery', name:'ESTS', full:'European Conference on General Thoracic Surgery', city:'Athens', start:'6/7/2026', end:'6/9/2026'},
-      {semester:'I semester', sub:'Hematology', name:'EHA', full:'European Hematology Association', city:'Stockholm', start:'6/11/2026', end:'6/14/2026'},
-      {semester:'I semester', sub:'Oncology', name:'ESMO Asia', full:'ESMO Targeted Anticancer Therapies (TAT) Asia Congress', city:'Hong Kong', start:'6/12/2026', end:'6/14/2026'},
-      {semester:'I semester', sub:'Oncology', name:'GAWC', full:'Global Academy of Women’s Cancer', city:'Munich', start:'6/13/2026', end:'6/14/2026'},
-      {semester:'I semester', sub:'Drug Development / Regulatory Science', name:'DIA', full:'Drug Information Association', city:'Philadelphia', start:'6/14/2026', end:'6/18/2026'},
-      {semester:'I semester', sub:'Healthcare Innovation', name:'HLTH Europe', full:'HLTH Europe: The Premier Healthcare Innovation Event in Europe', city:'Amsterdam', start:'6/15/2026', end:'6/18/2026'},
-      {semester:'I semester', sub:'Oncology', name:'ICML', full:'International Conference on Malignant Lymphoma', city:'Lugano', start:'6/17/2026', end:'6/21/2026'},
-      {semester:'I semester', sub:'Pediatric', name:'ESPGHAN', full:'European Society for Paediatric Gastroenterology, Hepatology and Nutrition', city:'Lille', start:'6/24/2026', end:'6/27/2026'},
-      {semester:'I semester', sub:'Neurology', name:'CureSMA', full:'Annual SMA Research & Clinical Care Meeting', city:'Orlando', start:'6/26/2026', end:'6/29/2026'},
-      {semester:'I semester', sub:'Neurology', name:'EAN', full:'European Academy of Neurology', city:'Geneva', start:'6/27/2026', end:'6/30/2026'},
-
-      // II semester
-      {semester:'II semester', sub:'Oncology', name:'ESMO GI', full:'ESMO Gastrointestinal Cancers Congress', city:'Munich', start:'7/1/2026', end:'7/4/2026'},
-      {semester:'II semester', sub:'Hematology', name:'ISTH', full:'International Society on Thrombosis and Haemostasis', city:'Paris', start:'7/11/2026', end:'7/15/2026'},
-      {semester:'II semester', sub:'Cardiology', name:'ESC', full:'European Society of Cardiology', city:'Munich', start:'8/28/2026', end:'8/31/2026'},
-      {semester:'II semester', sub:'Ophthalmology', name:'APVRS', full:'Asia-Pacific Vitreo-retina Society', city:'Queensland', start:'8/28/2026', end:'8/30/2026'},
-      {semester:'II semester', sub:'Infectious Diseases', name:'ESWI', full:'World One Health Congress', city:'Lisabon', start:'9/4/2026', end:'9/7/2026'},
-      {semester:'II semester', sub:'Pulmonology', name:'ERS', full:'European Respiratory Society', city:'Barcelona', start:'9/5/2026', end:'9/9/2026'},
-      {semester:'II semester', sub:'Pediatric', name:'ESPE', full:'European Society for Paediatric Endocrinology', city:'Marseilles', start:'9/8/2026', end:'9/10/2026'},
-      {semester:'II semester', sub:'Oncology', name:'WCLC/IASL', full:'World Conference on Lung Cancer', city:'Seoul', start:'9/12/2026', end:'9/15/2026'},
-      {semester:'II semester', sub:'Neurology', name:'WMS', full:'World Muscle Society', city:'Hiroshima', start:'9/29/2026', end:'10/3/2026'},
-      {semester:'II semester', sub:'Ophthalmology', name:'EURETINA', full:'European Society of Retina Specialists', city:'Vienna', start:'10/1/2026', end:'10/4/2026'},
-      {semester:'II semester', sub:'Neurology', name:'MDS', full:'International Parkinson and Movement Disorder Society', city:'Seoul', start:'10/4/2026', end:'10/8/2026'},
-      {semester:'II semester', sub:'Hematology', name:'DGHO', full:'German, Austrian and Swiss Societies of Hematology and Medical Oncology', city:'Vienna', start:'10/9/2026', end:'10/12/2026'},
-      {semester:'II semester', sub:'Pediatric', name:'EPNS', full:'European Paediatric Neurology Society', city:'Thessaloniki', start:'10/16/2026', end:'10/17/2026'},
-      {semester:'II semester', sub:'Gastroenterology', name:'UEGW', full:'United European Gastroenterology', city:'TBA', start:'10/17/2026', end:'10/20/2026'},
-      {semester:'II semester', sub:'Oncology', name:'ESMO', full:'European Society for Medical Oncology', city:'Madrid', start:'10/23/2026', end:'10/27/2026'},
-      {semester:'II semester', sub:'Allergy / Immunology', name:'ACAAI', full:'American College of Allergy, Asthma and Immunology', city:'Phoenix', start:'11/12/2026', end:'11/16/2026'},
-      {semester:'II semester', sub:'Healthcare Innovation', name:'HLTH USA', full:'HLTH USA: The Premier Healthcare Innovation Event (USA)', city:'Las Vegas', start:'11/15/2026', end:'11/18/2026'}
+    // color palette
+    const palette = [
+      "#e6194b","#3cb44b","#ffe119","#4363d8","#f58231","#911eb4","#46f0f0","#f032e6",
+      "#bcf60c","#fabebe","#008080","#e6beff","#9a6324","#fffac8","#800000","#aaffc3",
+      "#808000","#ffd8b1","#000075","#808080","#ffe4e1","#40e0d0","#6a3d9a","#b15928",
+      "#2b908f","#ff7f0e","#1f77b4","#2ca02c","#d62728","#9467bd"
     ];
 
-    // Normalize & attach coordinates; skip items with unknown coords (e.g., TBA)
-    const features = [];
-    for (const r of records) {
-      const city = normalizeCity(r.city);
-      const coords = cityCoords[city];
-      if (!coords) continue;
-      features.push({
-        type:'Feature',
-        properties:{ semester:r.semester, subcategory:r.sub, name:r.name, full_name:r.full,
-          location:city, start:r.start, end:r.end },
-        geometry:{ type:'Point', coordinates:coords }
-      });
-    }
-    const data = { type:'FeatureCollection', features };
-
-    const distinctSubs = [...new Set(features.map(f=>f.properties.subcategory))].sort();
-    const palette = ["#e6194b","#3cb44b","#ffe119","#0082c8","#f58231","#911eb4","#46f0f0","#f032e6",
-      "#d2f53c","#fabebe","#008080","#e6beff","#aa6e28","#fffac8","#800000","#aaffc3","#808000",
-      "#ffd8b1","#000080","#808080","#6a3d9a","#b15928","#2b908f","#ff1493"];
-    const subColor = {}; distinctSubs.forEach((s,i)=>subColor[s]=palette[i%palette.length]);
-
+    // Build map
     const map = new mapboxgl.Map({
-      container:'map', style:'mapbox://styles/mapbox/streets-v12',
-      center:[10,35], zoom:2.2, projection:'mercator'
+      container:'map',
+      style:'mapbox://styles/mapbox/streets-v12',
+      center:[10,35],
+      zoom:2.2,
+      projection:'mercator'
     });
 
-    map.on('load',()=>{
-      map.setPitch(0); map.setBearing(0);
-      map.addSource('conferences',{type:'geojson',data});
+    let features = [];
+    let distinctSubs = [];
+    let subColor = {};
 
-      const matchColor=['match',['get','subcategory']];
-      distinctSubs.forEach(s=>{matchColor.push(s,subColor[s]);});
+    const filtersRoot = document.getElementById('filters');
+    const cardsRoot   = document.getElementById('cards');
+
+    // -------- Data loading from JSON --------
+    fetch('conferences_2026.json')
+      .then(r => r.json())
+      .then(json => {
+        features = jsonToFeatures(json);
+        distinctSubs = [...new Set(features.map(f => f.properties.subcategory))].sort();
+        subColor = {}; distinctSubs.forEach((s,i)=> subColor[s] = palette[i % palette.length]);
+
+        map.once('load', initLayersAndUI);
+      })
+      .catch(err => {
+        console.error('Failed to load JSON', err);
+        alert('Could not load conferences_2026.json');
+      });
+
+    // Convert your JSON rows into GeoJSON features
+    function jsonToFeatures(rows){
+      const feats = [];
+      for (const r of rows){
+        const sem = (r.semester || '').trim();                 // "I" | "II"
+        const semesterLabel = sem === 'I' ? 'I semester' : (sem === 'II' ? 'II semester' : sem);
+        const sub = r.subspecialty || r.sub || 'Other';
+        const name = r.short_name || r.name || '(TBA)';
+        const full = r.full_name || '';
+        const cityRaw = normalizeCity(r.location_raw || r.city || '');
+        const start = normalizeDate(r.start_date || r.start);
+        const end   = normalizeDate(r.end_date   || r.end);
+        const link  = r.link || '';
+        let coords = null;
+
+        // Prefer explicit lat/lon if provided
+        if (Number.isFinite(r.lon) && Number.isFinite(r.lat)) {
+          coords = [r.lon, r.lat];
+        } else if (cityRaw && cityCoords[cityRaw]) {
+          coords = cityCoords[cityRaw];
+        }
+
+        if (!coords) continue; // skip rows we can't place
+
+        feats.push({
+          type:'Feature',
+          properties:{
+            semester: semesterLabel,
+            subcategory: sub,
+            name: name,
+            full_name: full,
+            location: cityRaw,
+            start: start || 'TBA',
+            end: end || 'TBA',
+            link: link || ''
+          },
+          geometry:{ type:'Point', coordinates: coords }
+        });
+      }
+      return feats;
+    }
+
+    function normalizeDate(s){
+      if (!s) return null;
+      // accept "YYYY-MM-DD" or "M/D/YYYY"
+      const iso = /^\d{4}-\d{2}-\d{2}$/;
+      const us  = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
+      try{
+        if (iso.test(s)) return s;
+        if (us.test(s)) {
+          const [m,d,y] = s.split('/').map(Number);
+          const mm = String(m).padStart(2,'0'), dd = String(d).padStart(2,'0');
+          return `${y}-${mm}-${dd}`;
+        }
+      }catch(e){}
+      return s; // leave as-is if already friendly
+    }
+
+    function initLayersAndUI(){
+      map.setPitch(0); map.setBearing(0);
+
+      const data = { type:'FeatureCollection', features };
+      map.addSource('conferences',{type:'geojson', data});
+
+      const matchColor = ['match',['get','subcategory']];
+      distinctSubs.forEach(s => { matchColor.push(s, subColor[s]); });
       matchColor.push('#ccc');
 
       map.addLayer({
@@ -273,91 +263,120 @@ let activeCard = null;
       });
 
       buildSidebar();
-      applyFilters(); // initial state → no pins/cards
-    });
+      applyFilters(); // start with nothing shown until user checks boxes
 
-    map.on('click', 'conferences-layer', (e) => {
-  const f = e.features[0];
-  const p = f.properties;
+      // pin -> popup + select matching card
+      map.on('click','conferences-layer',(e)=>{
+        const f = e.features[0], p = f.properties;
+        openPopupAndSelectCard(f, p);
+      });
 
-  // Close existing popup + clear selection
-  if (activePopup) activePopup.remove();
-  if (activeCard) activeCard.classList.remove('selected');
+      // map view toggle
+      document.getElementById('view-toggle').addEventListener('change', (e) => {
+        const val = (e.target.closest('input') || {}).value;
+        if (!val) return;
+        if (val === '2d') {
+          map.setProjection('mercator');
+          map.setStyle('mapbox://styles/mapbox/streets-v12');
+          map.once('styledata', ()=> map.setPaintProperty('conferences-layer','circle-color', matchColor));
+        } else if (val === '3d') {
+          map.setProjection('globe');
+          map.setStyle('mapbox://styles/mapbox/light-v11');
+          map.once('styledata', ()=>{
+            map.setPaintProperty('conferences-layer','circle-color', matchColor);
+            if (map.getFog()) map.setFog({}); else map.setFog({});
+          });
+        }
+      });
+    }
 
-  // Find matching card by name
-  const card = [...document.querySelectorAll('.card')]
-    .find(c => c.querySelector('.card-title').textContent === p.name);
+    function openPopupAndSelectCard(feature, props){
+      // close existing
+      if (activePopup) activePopup.remove();
+      if (activeCard) activeCard.classList.remove('selected');
 
-  if (card) {
-    card.classList.add('selected');
-    activeCard = card;
+      // select card
+      const card = [...document.querySelectorAll('.card')]
+        .find(c => c.dataset.name === props.name);
+      if (card) {
+        card.classList.add('selected');
+        activeCard = card;
+        card.scrollIntoView({ behavior:'smooth', block:'center' });
+      }
 
-    // 🔹 Smooth scroll sidebar to bring the card into view
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
+      // animate on globe: turn the world to the point
+      const viewMode = document.querySelector('input[name="mapview"]:checked').value;
+      if (viewMode === '3d') {
+        map.easeTo({
+          center: feature.geometry.coordinates,
+          zoom: Math.max(map.getZoom(), 3.2),
+          duration: 1500,
+          pitch: 45
+        });
+      }
 
-  // Create popup
-  const popup = new mapboxgl.Popup()
-    .setLngLat(f.geometry.coordinates)
-    .setHTML(`<div style="font-weight:700">${p.name}</div>
-              <div>${p.full_name}</div>
-              <div><b>${p.location}</b></div>
-              <div>${p.start} → ${p.end}</div>`)
-    .addTo(map);
+      // popup HTML (with link if present)
+      const linkHTML = props.link ? `<div style="margin-top:6px"><a href="${props.link}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">Open website ↗</a></div>` : '';
+      const popup = new mapboxgl.Popup()
+        .setLngLat(feature.geometry.coordinates)
+        .setHTML(`
+          <div style="font-weight:700">${props.name}</div>
+          <div>${props.full_name || ''}</div>
+          <div><b>${props.location || ''}</b></div>
+          <div>${props.start} → ${props.end}</div>
+          ${linkHTML}
+        `)
+        .addTo(map);
 
-  activePopup = popup;
+      activePopup = popup;
+      popup.on('close', ()=>{
+        if (activeCard) activeCard.classList.remove('selected');
+        activeCard = null; activePopup = null;
+      });
+    }
 
-  // When popup is closed → clear selection
-  popup.on('close', () => {
-    if (activeCard) activeCard.classList.remove('selected');
-    activeCard = null;
-    activePopup = null;
-  });
-});
-
-    const filtersRoot=document.getElementById('filters');
-    const cardsRoot=document.getElementById('cards');
-
+    // -------- Sidebar (filters) --------
     function groupBySemesterAndSub(dataFeatures){
-      const bySem={};
-      for(const f of dataFeatures){
-        const sem=f.properties.semester, sub=f.properties.subcategory;
-        if(!bySem[sem]) bySem[sem]=new Set();
+      const bySem = {};
+      for (const f of dataFeatures){
+        const sem = f.properties.semester, sub = f.properties.subcategory;
+        if (!bySem[sem]) bySem[sem] = new Set();
         bySem[sem].add(sub);
       }
-      const res={}; for(const sem of Object.keys(bySem)) res[sem]=[...bySem[sem]].sort();
+      const res = {};
+      for (const sem of Object.keys(bySem)) res[sem] = [...bySem[sem]].sort();
       return res;
     }
-    function colorDot(c){return `<span class="dot" style="background:${c}"></span>`;}
+    function colorDot(c){ return `<span class="dot" style="background:${c}"></span>`; }
 
     function buildSidebar(){
-      const grouped=groupBySemesterAndSub(features);
-      const wrapper=document.createElement('div');
+      const grouped = groupBySemesterAndSub(features);
+      const wrapper = document.createElement('div');
+
       Object.keys(grouped).sort().forEach(sem=>{
         const box=document.createElement('div'); box.className='semester';
         const titleRow=document.createElement('label'); titleRow.className='checkbox-row section-title';
-        const semId=`sem-${sem.replace(/\s+/g,'-')}`;
         titleRow.innerHTML=`<input type="checkbox" data-semester-master="${sem}"> ${sem}`;
         box.appendChild(titleRow);
+
         grouped[sem].forEach(sub=>{
-          const id=`sub-${sem}-${sub}`;
           const row=document.createElement('label'); row.className='checkbox-row';
           row.innerHTML=`<input type="checkbox" data-semester="${sem}" data-sub="${sub}"> ${colorDot(subColor[sub])} ${sub}`;
           box.appendChild(row);
         });
         wrapper.appendChild(box);
       });
+
       filtersRoot.innerHTML=''; filtersRoot.appendChild(wrapper);
 
-      filtersRoot.addEventListener('change',e=>{
-        const t=e.target;
-        if(t.dataset.semesterMaster){
+      filtersRoot.addEventListener('change', e=>{
+        const t = e.target;
+        if (t.dataset.semesterMaster){
           const sem=t.dataset.semesterMaster;
-          const subs=filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`);
-          subs.forEach(cb=>cb.checked=t.checked);
+          filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`).forEach(cb=> cb.checked = t.checked);
           t.indeterminate=false;
         }
-        if(t.dataset.sub){
+        if (t.dataset.sub){
           const sem=t.dataset.semester;
           const subs=[...filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`)];
           const master=filtersRoot.querySelector(`input[data-semester-master="${sem}"]`);
@@ -367,68 +386,55 @@ let activeCard = null;
         applyFilters();
       });
 
-      document.getElementById('clearAll').addEventListener('click',()=>{
+      document.getElementById('clearAll').addEventListener('click', ()=>{
         filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb=>{cb.checked=false; cb.indeterminate=false;});
         applyFilters();
       });
     }
 
+    // -------- Filtering + cards (with links) --------
     function applyFilters(){
       const subChecked=[...filtersRoot.querySelectorAll('input[data-sub]:checked')].map(i=>i.dataset.sub);
-      if(subChecked.length===0){
-        if(map.getLayer('conferences-layer')){
+
+      if (subChecked.length===0){
+        if (map.getLayer('conferences-layer')){
           map.setFilter('conferences-layer',['==',['get','subcategory'],'__none__']);
         }
         cardsRoot.innerHTML=''; return;
       }
-      const filter=['in',['get','subcategory'],['literal',subChecked]];
-      map.setFilter('conferences-layer',filter);
 
-      // Build right-side cards
-      const bySub={};
+      const filter=['in',['get','subcategory'],['literal',subChecked]];
+      map.setFilter('conferences-layer', filter);
+
+      // group features by subcategory
+      const bySub = {};
       features.forEach(f=>{
-        if(subChecked.includes(f.properties.subcategory)){
-          if(!bySub[f.properties.subcategory]) bySub[f.properties.subcategory]=[];
-          bySub[f.properties.subcategory].push(f);
+        if (subChecked.includes(f.properties.subcategory)){
+          (bySub[f.properties.subcategory] ||= []).push(f);
         }
       });
+
+      // sort inside each sub by start date (if parseable)
+      const parse = (s)=> Date.parse(s) || Infinity;
+      Object.values(bySub).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
+
+      // build cards
       cardsRoot.innerHTML='';
       Object.keys(bySub).sort().forEach(sub=>{
         const groupDiv=document.createElement('div'); groupDiv.className='card-group';
         groupDiv.innerHTML=`<div class="card-group-title">${colorDot(subColor[sub])} ${sub}</div>`;
+
         bySub[sub].forEach(f=>{
           const p=f.properties;
           const card=document.createElement('div'); card.className='card';
-          card.innerHTML=`<div class="card-title">${p.name}</div>
-                          <div class="card-sub">${p.location}</div>
-                          <div class="card-dates">${p.start} → ${p.end}</div>`;
-          card.addEventListener('click', () => {
-  // Close existing popup + clear selection
-  if (activePopup) activePopup.remove();
-  if (activeCard) activeCard.classList.remove('selected');
-
-  // Mark this card as selected
-  card.classList.add('selected');
-  activeCard = card;
-
-  // Create popup
-  const popup = new mapboxgl.Popup()
-    .setLngLat(f.geometry.coordinates)
-    .setHTML(`<div style="font-weight:700">${p.name}</div>
-              <div>${p.full_name}</div>
-              <div><b>${p.location}</b></div>
-              <div>${p.start} → ${p.end}</div>`)
-    .addTo(map);
-
-  activePopup = popup;
-
-  // When popup is closed → clear selection
-  popup.on('close', () => {
-    if (activeCard) activeCard.classList.remove('selected');
-    activeCard = null;
-    activePopup = null;
-  });
-});
+          card.dataset.name = p.name;
+          card.innerHTML=`
+            <div class="card-title">${p.name}</div>
+            <div class="card-sub">${p.location}</div>
+            <div class="card-dates">${p.start} → ${p.end}</div>
+            ${p.link ? `<a class="card-link" href="${p.link}" target="_blank" rel="noopener">Open website ↗</a>` : ``}
+          `;
+          card.addEventListener('click', ()=> openPopupAndSelectCard(f, p));
           groupDiv.appendChild(card);
         });
         cardsRoot.appendChild(groupDiv);
