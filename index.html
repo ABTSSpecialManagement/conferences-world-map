@@ -27,7 +27,6 @@
     .checkbox-row:hover { background:#f7f7f7; }
     .dot { width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,.15); }
 
-    /* Cards */
     .card-group { margin-bottom:16px; }
     .card-group-title { font-size:13px; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
     .card {
@@ -42,7 +41,6 @@
     .card-dates { font-size:12px; color:#444; margin-top:4px; }
     .card-link { display:inline-block; font-size:12px; margin-top:6px; text-decoration:underline; }
 
-    /* Map view toggle */
     #view-toggle {
       display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:8px 10px;
       background:#fff; border:1px solid #e6e6e6; border-radius:10px;
@@ -50,7 +48,6 @@
     #view-toggle label { font-size:13px; display:flex; align-items:center; gap:6px; }
     #view-toggle input { accent-color:#4a90e2; }
 
-    /* New Clear button */
     #clear-btn {
       font-family: var(--font) !important;
       color:#fff; margin-top: 20px; padding: 10px 10px; font-size: 16px;
@@ -58,7 +55,6 @@
     }
     #clear-btn:hover { background: #1E88BD; border: 1px solid #1E88BD; }
 
-    /* Make Mapbox popups inherit the font */
     .mapboxgl-popup, .mapboxgl-popup * { font-family: var(--font); }
   </style>
 </head>
@@ -83,13 +79,12 @@
   </div>
 
   <script>
-    // Mapbox token
-    mapboxgl.accessToken = 'pk.eyJ1IjoibWFqYS1wYXZsaWNpY2MiLCJhIjoiY21laWJ5aGh6MDBucTJrczhnZzdrY3pqZyJ9.2LRD1_4AAyAVQWZ9kTZa2A';
+    // ✅ your original token restored
+    mapboxgl.accessToken = 'pk.eyJ1IjoibWFqYS1wYXZsaWNpYyIsImEiOiJjbWVpYnloeWowMG5xMmtzOGdnN2tjempnIn0.2LRD1_4AAyAVQWZ9kTZa2A';
 
     let activePopup = null;
     let activeCard = null;
 
-    // City dictionary
     const cityCoords = {
       "San Francisco": [-122.4194, 37.7749],
       "Edinburgh": [-3.1883, 55.9533],
@@ -161,7 +156,6 @@
         .trim();
     };
 
-    // palette for subspecialties
     const palette = [
       "#e6194b","#3cb44b","#ffe119","#4363d8","#f58231","#911eb4","#46f0f0","#f032e6",
       "#bcf60c","#fabebe","#008080","#e6beff","#9a6324","#fffac8","#800000","#aaffc3",
@@ -169,7 +163,6 @@
       "#2b908f","#ff7f0e","#1f77b4","#2ca02c","#d62728","#9467bd"
     ];
 
-    // Map init (single colorful style)
     const map = new mapboxgl.Map({
       container:'map',
       style:'mapbox://styles/mapbox/streets-v12',
@@ -181,9 +174,9 @@
     let features = [];
     let distinctSubs = [];
     let subColor = {};
-
     const filtersRoot = document.getElementById('filters');
     const cardsRoot   = document.getElementById('cards');
+    let initialized = false;
 
     // Load data from JSON
     fetch('conferences_2026.json')
@@ -192,17 +185,20 @@
         features = jsonToFeatures(json);
         distinctSubs = [...new Set(features.map(f => f.properties.subcategory))].sort();
         subColor = {}; distinctSubs.forEach((s,i)=> subColor[s] = palette[i % palette.length]);
-        map.once('load', initLayersAndUI);
+
+        // ✅ If map already loaded, init now; else wait for 'load'
+        if (map.loaded()) initLayersAndUI();
+        else map.once('load', initLayersAndUI);
       })
       .catch(err => {
         console.error('Failed to load JSON', err);
-        alert('Could not load conferences_2026.json');
+        alert('Could not load conferences_2026.json. Make sure you are serving this file over HTTP (not file://) and that the path is correct.');
       });
 
     function jsonToFeatures(rows){
       const feats = [];
       for (const r of rows){
-        const sem = (r.semester || '').trim(); // "I" | "II"
+        const sem = (r.semester || '').trim();
         const semesterLabel = sem === 'I' ? 'I semester' : (sem === 'II' ? 'II semester' : sem);
         const sub = r.subspecialty || r.sub || 'Other';
         const name = r.short_name || r.name || '(TBA)';
@@ -255,6 +251,9 @@
     }
 
     function initLayersAndUI(){
+      if (initialized) return;
+      initialized = true;
+
       map.setPitch(0); map.setBearing(0);
 
       const data = { type:'FeatureCollection', features };
@@ -272,13 +271,11 @@
       buildSidebar();
       applyFilters(); // start with nothing shown until user checks boxes
 
-      // Pin click
       map.on('click','conferences-layer',(e)=>{
         const f = e.features[0], p = f.properties;
         openPopupAndSelectCard(f, p);
       });
 
-      // Map view toggle — only switch projection (style stays the same)
       document.getElementById('view-toggle').addEventListener('change', (e) => {
         const input = e.target.closest('input');
         if (!input) return;
@@ -342,7 +339,6 @@
       });
     }
 
-    // Sidebar builders
     function groupBySemesterAndSub(dataFeatures){
       const bySem = {};
       for (const f of dataFeatures){
@@ -393,7 +389,6 @@
         applyFilters();
       });
 
-      // Clear all (new id)
       document.getElementById('clear-btn').addEventListener('click',()=>{
         filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb=>{
           cb.checked=false; cb.indeterminate=false;
