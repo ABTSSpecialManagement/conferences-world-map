@@ -303,22 +303,24 @@
         card.scrollIntoView({ behavior:'smooth', block:'center' });
       }
 
-      const viewMode = document.querySelector('input[name="mapview"]:checked').value;
-      if (viewMode === '3d') {
-        map.easeTo({
-          center: feature.geometry.coordinates,
-          zoom: Math.max(map.getZoom(), 3.2),
-          duration: 1500,
-          pitch: 45
-        });
-      } else {
-        map.easeTo({
-          center: feature.geometry.coordinates,
-          duration: 800,
-          pitch: 0,
-          bearing: 0
-        });
-      }
+     const viewMode = document.querySelector('input[name="mapview"]:checked').value;
+if (viewMode === '3d') {
+  map.easeTo({
+    center: feature.geometry.coordinates,
+    zoom: map.getZoom(),        // ← keep current zoom (no zoom-in)
+    pitch: map.getPitch(),      // ← keep current pitch
+    bearing: map.getBearing(),  // ← keep current bearing (just turn to center)
+    duration: 1500,
+    essential: true
+  });
+} else {
+  map.easeTo({
+    center: feature.geometry.coordinates,
+    duration: 800,
+    pitch: 0,
+    bearing: 0
+  });
+}
 
       const linkHTML = props.link ? `<div style="margin-top:6px"><a href="${props.link}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">Open website ↗</a></div>` : '';
       const popup = new mapboxgl.Popup()
