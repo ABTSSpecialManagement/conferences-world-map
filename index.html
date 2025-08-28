@@ -58,32 +58,72 @@
     .mapboxgl-popup, .mapboxgl-popup * { font-family: var(--font); }
 
     /* Brand header in the left sidebar */
-#brand {
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:8px;
-  padding:12px 8px 14px;
-  border-bottom:1px solid #eee;
-  margin-bottom:10px;
-}
-#brand .brand-logo {
-  width:180px; height:80px; object-fit:contain;
-}
-#brand .brand-name {
-  font-family: var(--font);
-  font-size:18px; font-weight:700; letter-spacing:.2px;
-}
+    #brand {
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      padding:12px 8px 14px; border-bottom:1px solid #eee; margin-bottom:10px;
+    }
+    #brand .brand-logo { width:180px; height:80px; object-fit:contain; }
+    #brand .brand-name { font-family: var(--font); font-size:18px; font-weight:700; letter-spacing:.2px; }
 
+    /* -------- Mobile top bar + drawers -------- */
+    #topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 52px;
+      display: none; align-items: center; justify-content: space-between;
+      padding: 0 10px; background:#fff; border-bottom:1px solid #e6e6e6; z-index: 10;
+      font-family: var(--font);
+    }
+    #topbar .tb-title { font-weight:700; letter-spacing:.2px; }
+    #topbar .tb-btn {
+      appearance: none; border:1px solid #d6d6d6; background:#fff; padding:6px 10px; border-radius:8px;
+      font-size:14px; line-height:1; cursor:pointer;
+    }
+    #topbar .tb-btn:active { transform: translateY(1px); }
+
+    /* Scrim behind drawers */
+    #scrim { display:none; position: fixed; inset: 52px 0 0 0; background: rgba(0,0,0,.28); z-index: 10; }
+    #scrim.show { display:block; }
+
+    /* Mobile layout */
+    @media (max-width: 900px) {
+      #topbar { display:flex; padding-top: env(safe-area-inset-top); height: calc(52px + env(safe-area-inset-top)); }
+      #map { top: calc(52px + env(safe-area-inset-top)); left: 0; right: 0; } /* map below the topbar */
+
+      /* Turn side panels into drawers */
+      #menu, #cards-panel {
+        position: fixed; top: calc(52px + env(safe-area-inset-top)); bottom: 0;
+        width: 88vw; max-width: 420px; background: #fff; z-index: 11;
+        transition: transform .25s ease; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      }
+      #menu       { left: 0;  transform: translateX(-100%); }
+      #menu.open  { transform: translateX(0); }
+      #cards-panel       { right: 0; transform: translateX(100%); }
+      #cards-panel.open  { transform: translateX(0); }
+
+      /* Tighter paddings on small screens */
+      #menu, #cards-panel { padding: 14px 12px; }
+      .section-title { margin-top: 8px; }
+
+      /* Larger tap targets */
+      .checkbox-row { padding:6px 4px; }
+      .card { padding:12px; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Mobile top bar + scrim -->
+  <div id="topbar">
+    <button id="btn-filters" class="tb-btn" aria-controls="menu" aria-expanded="false">Filters</button>
+    <div class="tb-title">Conferences Map</div>
+    <button id="btn-cards" class="tb-btn" aria-controls="cards-panel" aria-expanded="false">Selected</button>
+  </div>
+  <div id="scrim" aria-hidden="true"></div>
+
   <div id="menu">
     <div id="brand">
-  <!-- Replace "logo.png" with your real path or inline SVG -->
-  <img class="brand-logo" src="ABTSx4.png" alt="Logo">
-  <div class="brand-name">Conferences Map</div>
-</div>
+      <img class="brand-logo" src="ABTSx4.png" alt="Logo">
+      <div class="brand-name">Conferences Map</div>
+    </div>
     <div class="section-title">Filters</div>
     <div id="filters"></div>
     <button id="clear-btn">Clear All</button>
@@ -322,6 +362,43 @@
           map.setFog({});
         }
       });
+
+      // ---- Mobile drawers (filters & selected) ----
+      const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+      const topbarFiltersBtn = document.getElementById('btn-filters');
+      const topbarCardsBtn   = document.getElementById('btn-cards');
+      const scrim            = document.getElementById('scrim');
+      const menuEl           = document.getElementById('menu');
+      const cardsEl          = document.getElementById('cards-panel');
+
+      function openDrawer(which){
+        if (!isMobile()) return;
+        if (which === 'filters') {
+          menuEl.classList.add('open');
+          topbarFiltersBtn.setAttribute('aria-expanded','true');
+        } else {
+          cardsEl.classList.add('open');
+          topbarCardsBtn.setAttribute('aria-expanded','true');
+        }
+        scrim.classList.add('show');
+        document.body.style.overflow='hidden';
+      }
+      function closeDrawers(){
+        menuEl.classList.remove('open');
+        cardsEl.classList.remove('open');
+        topbarFiltersBtn.setAttribute('aria-expanded','false');
+        topbarCardsBtn.setAttribute('aria-expanded','false');
+        scrim.classList.remove('show');
+        document.body.style.overflow='';
+      }
+
+      topbarFiltersBtn.addEventListener('click', ()=> openDrawer('filters'));
+      topbarCardsBtn.addEventListener('click',   ()=> openDrawer('cards'));
+      scrim.addEventListener('click', closeDrawers);
+      window.addEventListener('resize', ()=> { if (!isMobile()) closeDrawers(); });
+
+      // make available to other functions:
+      window.__maybeCloseForMobile = function(){ if (isMobile()) closeDrawers(); };
     }
 
     function openPopupAndSelectCard(feature, props){
@@ -367,6 +444,9 @@
         if (activeCard) activeCard.classList.remove('selected');
         activeCard = null; activePopup = null;
       });
+
+      // close drawers on mobile so map is visible
+      if (window.__maybeCloseForMobile) window.__maybeCloseForMobile();
     }
 
     // Sidebar
