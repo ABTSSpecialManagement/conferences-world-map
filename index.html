@@ -246,7 +246,7 @@
     let initialized = false;
 
     // Load data from JSON
-    fetch('conferences_2026.json')
+    fetch('conferences_2026.updated.json')
       .then(r => r.json())
       .then(json => {
         features = jsonToFeatures(json);
