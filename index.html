@@ -149,7 +149,12 @@
 
     let activePopup = null;
     let activeCard = null;
-
+    
+    function closeActiveUI(){
+  if (activePopup) { activePopup.remove(); activePopup = null; }
+  if (activeCard)  { activeCard.classList.remove('selected'); activeCard = null; }
+}
+    
     // City dictionary
     const cityCoords = {
       "San Francisco": [-122.4194, 37.7749],
@@ -506,88 +511,92 @@
       filtersRoot.innerHTML=''; filtersRoot.appendChild(wrapper);
 
       filtersRoot.addEventListener('change', e=>{
-        const t = e.target;
-        if (t.dataset.semesterMaster){
-          const sem=t.dataset.semesterMaster;
-          filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`).forEach(cb=> cb.checked = t.checked);
-          t.indeterminate=false;
-        }
-        if (t.dataset.sub){
-          const sem=t.dataset.semester;
-          const subs=[...filtersRoot.querySelectorAll(`input[data-semester="${sem}"][data-sub]`)];
-          const master=filtersRoot.querySelector(`input[data-semester-master="${sem}"]`);
-          const all=subs.every(cb=>cb.checked), none=subs.every(cb=>!cb.checked);
-          master.checked=all; master.indeterminate=!all && !none;
-        }
-        applyFilters();
-      });
+  const t = e.target;
+  if (t.dataset.semesterMaster){
+    const sem=t.dataset.semesterMaster;
+    filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`).forEach(cb=> cb.checked = t.checked);
+    t.indeterminate=false;
+  }
+  if (t.dataset.sub){
+    const sem=t.dataset.semester;
+    const subs=[...filtersRoot.querySelectorAll(`input[data-semester="${sem}"][data-sub]`)];
+    const master=filtersRoot.querySelector(`input[data-semester-master="${sem}"]`);
+    const all=subs.every(cb=>cb.checked), none=subs.every(cb=>!cb.checked);
+    master.checked=all; master.indeterminate=!all && !none;
+  }
+  closeActiveUI();          // 🔹 close popup when filters change
+  applyFilters();
+});
 
       document.getElementById('clear-btn').addEventListener('click',()=>{
-        filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-          cb.checked=false; cb.indeterminate=false;
-        });
-        applyFilters();
-      });
+    filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.checked=false; cb.indeterminate=false;
+    });
+    closeActiveUI();          // 🔹 close any open popup & unhighlight card
+    applyFilters();
+  });
+} // <-- ✅ this closes buildSidebar()
+
+// Apply filters using (semester, sub) PAIRS
+function applyFilters(){
+  const checkedPairs = [...filtersRoot.querySelectorAll('input[data-sub]:checked')]
+    .map(i => ({ sem: i.dataset.semester, sub: i.dataset.sub }));
+
+  if (checkedPairs.length===0){
+    if (map.getLayer('conferences-layer')){
+      map.setFilter('conferences-layer',['==',['get','subcategory'],'__none__']);
     }
+    closeActiveUI();        // 🔹 ensure it’s closed when nothing is shown
+    cardsRoot.innerHTML=''; 
+    return;
+  }
 
-    // Apply filters using (semester, sub) PAIRS
-    function applyFilters(){
-      const checkedPairs = [...filtersRoot.querySelectorAll('input[data-sub]:checked')]
-        .map(i => ({ sem: i.dataset.semester, sub: i.dataset.sub }));
+  // Mapbox filter: OR of AND(semester==X, sub==Y)
+  const filter = ['any'];
+  checkedPairs.forEach(p => {
+    filter.push(['all',
+      ['==', ['get','semester'], p.sem],
+      ['==', ['get','subcategory'], p.sub]
+    ]);
+  });
+  map.setFilter('conferences-layer', filter);
 
-      if (checkedPairs.length===0){
-        if (map.getLayer('conferences-layer')){
-          map.setFilter('conferences-layer',['==',['get','subcategory'],'__none__']);
-        }
-        cardsRoot.innerHTML=''; return;
-      }
-
-      // Mapbox filter: OR of AND(semester==X, sub==Y)
-      const filter = ['any'];
-      checkedPairs.forEach(p => {
-        filter.push(['all',
-          ['==', ['get','semester'], p.sem],
-          ['==', ['get','subcategory'], p.sub]
-        ]);
-      });
-      map.setFilter('conferences-layer', filter);
-
-      // Build cards from the same pair set
-      const byGroup = {}; // key = `${sem} — ${sub}` to keep semesters distinct if both selected
-      features.forEach(f=>{
-        const sem = f.properties.semester, sub = f.properties.subcategory;
-        if (checkedPairs.some(p => p.sem===sem && p.sub===sub)) {
-          const key = `${sem} — ${sub}`;
-          (byGroup[key] ||= []).push(f);
-        }
-      });
-
-      const parse = (s)=> Date.parse(s) || Infinity;
-      Object.values(byGroup).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
-
-      cardsRoot.innerHTML='';
-      Object.keys(byGroup).sort().forEach(groupKey=>{
-        const [semLabel, subLabel] = groupKey.split(' — ');
-        const groupDiv=document.createElement('div'); groupDiv.className='card-group';
-        groupDiv.innerHTML=`<div class="card-group-title">${colorDot(subColor[subLabel]||'#ccc')} ${semLabel} · ${subLabel}</div>`;
-
-        byGroup[groupKey].forEach(f=>{
-          const p=f.properties;
-          const card=document.createElement('div'); card.className='card';
-          card.dataset.name = p.name;
-          card.dataset.semester = p.semester;
-          card.innerHTML=`
-            <div class="card-title">${p.name}</div>
-            <div class="card-sub">${p.location}</div>
-            <div class="card-dates">${p.start} → ${p.end}</div>
-            ${p.link ? `<a class="card-link" href="${p.link}" target="_blank" rel="noopener">Open website ↗</a>` : ``}
-          `;
-          card.addEventListener('click', ()=> openPopupAndSelectCard(f, p));
-          groupDiv.appendChild(card);
-        });
-        cardsRoot.appendChild(groupDiv);
-      });
+  // Build cards…
+  const byGroup = {};
+  features.forEach(f=>{
+    const sem = f.properties.semester, sub = f.properties.subcategory;
+    if (checkedPairs.some(p => p.sem===sem && p.sub===sub)) {
+      const key = `${sem} — ${sub}`;
+      (byGroup[key] ||= []).push(f);
     }
+  });
+
+  const parse = (s)=> Date.parse(s) || Infinity;
+  Object.values(byGroup).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
+
+  cardsRoot.innerHTML='';
+  Object.keys(byGroup).sort().forEach(groupKey=>{
+    const [semLabel, subLabel] = groupKey.split(' — ');
+    const groupDiv=document.createElement('div'); groupDiv.className='card-group';
+    groupDiv.innerHTML=`<div class="card-group-title">${colorDot(subColor[subLabel]||'#ccc')} ${semLabel} · ${subLabel}</div>`;
+
+    byGroup[groupKey].forEach(f=>{
+      const p=f.properties;
+      const card=document.createElement('div'); card.className='card';
+      card.dataset.name = p.name;
+      card.dataset.semester = p.semester;
+      card.innerHTML=`
+        <div class="card-title">${p.name}</div>
+        <div class="card-sub">${p.location}</div>
+        <div class="card-dates">${p.start} → ${p.end}</div>
+        ${p.link ? `<a class="card-link" href="${p.link}" target="_blank" rel="noopener">Open website ↗</a>` : ``}
+      `;
+      card.addEventListener('click', ()=> openPopupAndSelectCard(f, p));
+      groupDiv.appendChild(card);
+    });
+    cardsRoot.appendChild(groupDiv);
+  });
+}
   </script>
 </body>
 </html>
