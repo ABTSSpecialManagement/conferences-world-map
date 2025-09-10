@@ -22,7 +22,6 @@
       border-left:1px solid #e6e6e6; padding:16px 14px;
     }
     .section-title { font-size:14px; font-weight:700; margin:12px 0 6px; }
-    .semester { border:1px solid #eee; border-radius:12px; padding:10px 12px; margin-bottom:12px; }
     .checkbox-row { display:flex; align-items:center; gap:8px; font-size:14px; padding:4px 2px; border-radius:8px; }
     .checkbox-row:hover { background:#f7f7f7; }
     .dot { width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,.15); }
@@ -39,7 +38,7 @@
     .card-title { font-size:14px; font-weight:600; }
     .card-sub { font-size:13px; color:#666; }
     .card-dates { font-size:12px; color:#444; margin-top:4px; }
-    .card-link { display:inline-block; font-size:12px; margin-top:6px; text-decoration:underline; }
+    .card-link { display:inline-block; font-size:12px; margin-top:6px; text-decoration:underline; color:#1f6feb; }
 
     #view-toggle {
       display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:8px 10px;
@@ -125,7 +124,7 @@
       <img class="brand-logo" src="ABTSx4.png" alt="Logo">
       <div class="brand-name">Conferences Map</div>
     </div>
-    <div class="section-title">Filters</div>
+    <div class="section-title">Subspecialties (A–Z)</div>
     <div id="filters"></div>
     <button id="clear-btn">Clear All</button>
   </div>
@@ -149,12 +148,12 @@
 
     let activePopup = null;
     let activeCard = null;
-    
+
     function closeActiveUI(){
-  if (activePopup) { activePopup.remove(); activePopup = null; }
-  if (activeCard)  { activeCard.classList.remove('selected'); activeCard = null; }
-}
-    
+      if (activePopup) { activePopup.remove(); activePopup = null; }
+      if (activeCard)  { activeCard.classList.remove('selected'); activeCard = null; }
+    }
+
     // City dictionary
     const cityCoords = {
       "San Francisco": [-122.4194, 37.7749],
@@ -250,12 +249,12 @@
     const cardsRoot   = document.getElementById('cards');
     let initialized = false;
 
-    // Load data from JSON
+    // Load data from JSON (semester field is ignored)
     fetch('conferences_2026.updated.json')
       .then(r => r.json())
       .then(json => {
         features = jsonToFeatures(json);
-        distinctSubs = [...new Set(features.map(f => f.properties.subcategory))].sort();
+        distinctSubs = [...new Set(features.map(f => f.properties.subcategory))].sort((a,b)=>a.localeCompare(b));
         subColor = {}; distinctSubs.forEach((s,i)=> subColor[s] = palette[i % palette.length]);
 
         if (map.loaded()) initLayersAndUI();
@@ -263,10 +262,10 @@
       })
       .catch(err => {
         console.error('Failed to load JSON', err);
-        alert('Could not load conferences_2026.json. Serve via http and check the path.');
+        alert('Could not load conferences_2026.updated.json. Serve via http and check the path.');
       });
 
-    // --- Helpers: date + semester ---
+    // --- Helpers: dates ---
     function normalizeDate(s){
       if (!s) return null;
       const iso = /^\d{4}-\d{2}-\d{2}$/;
@@ -281,19 +280,8 @@
       }catch(e){}
       return s;
     }
-    function monthFromDateStr(s){
-      if (!s) return null;
-      const d = new Date(s);
-      if (isNaN(d)) return null;
-      return d.getUTCMonth()+1; // 1..12
-    }
-    function computeSemester(start, end){
-      const m = monthFromDateStr(start) ?? monthFromDateStr(end);
-      if (!m) return 'Unknown semester';
-      return (m >= 1 && m <= 6) ? 'I semester' : 'II semester';
-    }
 
-    // Convert JSON rows to GeoJSON features (semester computed from dates)
+    // Convert JSON rows to GeoJSON features (no semester used anymore)
     function jsonToFeatures(rows){
       const feats = [];
       for (const r of rows){
@@ -305,8 +293,6 @@
         const end   = normalizeDate(r.end_date   || r.end);
         const link  = r.link || '';
 
-        const semesterLabel = computeSemester(start, end);
-
         let coords = null;
         if (Number.isFinite(r.lon) && Number.isFinite(r.lat)) {
           coords = [r.lon, r.lat];
@@ -315,15 +301,17 @@
         }
         if (!coords) continue;
 
+        const uid = [name, start || 'TBA', cityRaw || 'TBA', link || ''].join('|');
+
         feats.push({
           type:'Feature',
           properties:{
-            semester: semesterLabel,
             subcategory: sub,
             name, full_name: full, location: cityRaw,
             start: start || 'TBA',
             end: end || 'TBA',
-            link
+            link,
+            uid
           },
           geometry:{ type:'Point', coordinates: coords }
         });
@@ -388,16 +376,10 @@
 
       function openDrawer(which){
         if (!isMobile()) return;
-        if (openDrawerName === which) { // toggle close if same button
-          closeDrawers();
-          return;
-        }
-        // Close any existing drawer first
-        if (openDrawerName) {
-          if (openDrawerName === 'filters') menuEl.classList.remove('open');
-          if (openDrawerName === 'cards')   cardsEl.classList.remove('open');
-        }
-        // Open requested
+        if (openDrawerName === which) { closeDrawers(); return; }
+        if (openDrawerName === 'filters') menuEl.classList.remove('open');
+        if (openDrawerName === 'cards')   cardsEl.classList.remove('open');
+
         if (which === 'filters') menuEl.classList.add('open');
         if (which === 'cards')   cardsEl.classList.add('open');
 
@@ -432,8 +414,7 @@
       if (activePopup) activePopup.remove();
       if (activeCard) activeCard.classList.remove('selected');
 
-      const card = [...document.querySelectorAll('.card')]
-        .find(c => c.dataset.name === props.name && c.dataset.semester === props.semester);
+      const card = document.querySelector(`.card[data-uid="${CSS.escape(props.uid)}"]`);
       if (card) {
         card.classList.add('selected');
         activeCard = card;
@@ -444,7 +425,7 @@
       if (viewMode === '3d') {
         map.easeTo({
           center: feature.geometry.coordinates,
-          zoom: map.getZoom(),          // keep current zoom (only rotate)
+          zoom: map.getZoom(),
           pitch: map.getPitch(),
           bearing: map.getBearing(),
           duration: 1500,
@@ -454,7 +435,7 @@
         map.easeTo({ center: feature.geometry.coordinates, duration: 800, pitch: 0, bearing: 0 });
       }
 
-      const linkHTML = props.link ? `<div style="margin-top:6px"><a href="${props.link}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">Open website ↗</a></div>` : '';
+      const linkHTML = props.link ? `<div style="margin-top:6px"><a href="${props.link}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">Visit website</a></div>` : '';
       const popup = new mapboxgl.Popup()
         .setLngLat(feature.geometry.coordinates)
         .setHTML(`
@@ -472,131 +453,89 @@
         activeCard = null; activePopup = null;
       });
 
-      // close any open drawer on mobile after selecting
       if (window.__closeDrawersIfMobile) window.__closeDrawersIfMobile();
     }
 
-    // Sidebar
-    function groupBySemesterAndSub(dataFeatures){
-      const bySem = {};
-      for (const f of dataFeatures){
-        const sem = f.properties.semester, sub = f.properties.subcategory;
-        (bySem[sem] ||= new Set()).add(sub);
-      }
-      const res = {};
-      for (const sem of Object.keys(bySem)) res[sem] = [...bySem[sem]].sort();
-      return res;
-    }
+    // Sidebar (A–Z subspecialties only)
     function colorDot(c){ return `<span class="dot" style="background:${c}"></span>`; }
 
     function buildSidebar(){
-      const grouped = groupBySemesterAndSub(features);
       const wrapper = document.createElement('div');
-
-      Object.keys(grouped).sort().forEach(sem=>{
-        const box=document.createElement('div'); box.className='semester';
-        const titleRow=document.createElement('label'); titleRow.className='checkbox-row section-title';
-        titleRow.innerHTML=`<input type="checkbox" data-semester-master="${sem}"> ${sem}`;
-        box.appendChild(titleRow);
-
-        grouped[sem].forEach(sub=>{
-          const row=document.createElement('label'); row.className='checkbox-row';
-          // keep semester on each input so filtering can match the pair
-          row.innerHTML=`<input type="checkbox" data-semester="${sem}" data-sub="${sub}"> ${colorDot(subColor[sub])} ${sub}`;
-          box.appendChild(row);
-        });
-        wrapper.appendChild(box);
+      distinctSubs.forEach(sub=>{
+        const row=document.createElement('label');
+        row.className='checkbox-row';
+        row.innerHTML=`<input type="checkbox" data-sub="${sub}"> ${colorDot(subColor[sub])} ${sub}`;
+        wrapper.appendChild(row);
       });
 
       filtersRoot.innerHTML=''; filtersRoot.appendChild(wrapper);
 
-      filtersRoot.addEventListener('change', e=>{
-  const t = e.target;
-  if (t.dataset.semesterMaster){
-    const sem=t.dataset.semesterMaster;
-    filtersRoot.querySelectorAll(`input[data-semester="${sem}"]`).forEach(cb=> cb.checked = t.checked);
-    t.indeterminate=false;
-  }
-  if (t.dataset.sub){
-    const sem=t.dataset.semester;
-    const subs=[...filtersRoot.querySelectorAll(`input[data-semester="${sem}"][data-sub]`)];
-    const master=filtersRoot.querySelector(`input[data-semester-master="${sem}"]`);
-    const all=subs.every(cb=>cb.checked), none=subs.every(cb=>!cb.checked);
-    master.checked=all; master.indeterminate=!all && !none;
-  }
-  closeActiveUI();          // 🔹 close popup when filters change
-  applyFilters();
-});
+      filtersRoot.addEventListener('change', ()=>{
+        closeActiveUI();
+        applyFilters();
+      });
 
       document.getElementById('clear-btn').addEventListener('click',()=>{
-    filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-      cb.checked=false; cb.indeterminate=false;
-    });
-    closeActiveUI();          // 🔹 close any open popup & unhighlight card
-    applyFilters();
-  });
-} // <-- ✅ this closes buildSidebar()
+        filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+          cb.checked=false;
+        });
+        closeActiveUI();
+        applyFilters();
+      });
+    } // end buildSidebar
 
-// Apply filters using (semester, sub) PAIRS
-function applyFilters(){
-  const checkedPairs = [...filtersRoot.querySelectorAll('input[data-sub]:checked')]
-    .map(i => ({ sem: i.dataset.semester, sub: i.dataset.sub }));
+    // Apply filters using SUBSPECIALTY only
+    function applyFilters(){
+      const selectedSubs = [...filtersRoot.querySelectorAll('input[data-sub]:checked')]
+        .map(i => i.dataset.sub);
 
-  if (checkedPairs.length===0){
-    if (map.getLayer('conferences-layer')){
-      map.setFilter('conferences-layer',['==',['get','subcategory'],'__none__']);
+      if (selectedSubs.length===0){
+        if (map.getLayer('conferences-layer')){
+          map.setFilter('conferences-layer',['==',['get','subcategory'],'__none__']);
+        }
+        closeActiveUI();
+        cardsRoot.innerHTML='';
+        return;
+      }
+
+      // Mapbox filter: OR of (subcategory == selected)
+      const filter = ['any'];
+      selectedSubs.forEach(sub => filter.push(['==', ['get','subcategory'], sub]));
+      map.setFilter('conferences-layer', filter);
+
+      // Build cards grouped by sub
+      const bySub = {};
+      features.forEach(f=>{
+        const sub = f.properties.subcategory;
+        if (selectedSubs.includes(sub)) {
+          (bySub[sub] ||= []).push(f);
+        }
+      });
+
+      const parse = (s)=> Date.parse(s) || Infinity;
+      Object.values(bySub).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
+
+      cardsRoot.innerHTML='';
+      Object.keys(bySub).sort((a,b)=>a.localeCompare(b)).forEach(subLabel=>{
+        const groupDiv=document.createElement('div'); groupDiv.className='card-group';
+        groupDiv.innerHTML=`<div class="card-group-title">${colorDot(subColor[subLabel]||'#ccc')} ${subLabel}</div>`;
+
+        bySub[subLabel].forEach(f=>{
+          const p=f.properties;
+          const card=document.createElement('div'); card.className='card';
+          card.dataset.uid = p.uid;
+          card.innerHTML=`
+            <div class="card-title">${p.name}</div>
+            <div class="card-sub">${p.location}</div>
+            <div class="card-dates">${p.start} → ${p.end}</div>
+            ${p.link ? `<a class="card-link" href="${p.link}" target="_blank" rel="noopener">Visit website</a>` : ``}
+          `;
+          card.addEventListener('click', ()=> openPopupAndSelectCard(f, p));
+          groupDiv.appendChild(card);
+        });
+        cardsRoot.appendChild(groupDiv);
+      });
     }
-    closeActiveUI();        // 🔹 ensure it’s closed when nothing is shown
-    cardsRoot.innerHTML=''; 
-    return;
-  }
-
-  // Mapbox filter: OR of AND(semester==X, sub==Y)
-  const filter = ['any'];
-  checkedPairs.forEach(p => {
-    filter.push(['all',
-      ['==', ['get','semester'], p.sem],
-      ['==', ['get','subcategory'], p.sub]
-    ]);
-  });
-  map.setFilter('conferences-layer', filter);
-
-  // Build cards…
-  const byGroup = {};
-  features.forEach(f=>{
-    const sem = f.properties.semester, sub = f.properties.subcategory;
-    if (checkedPairs.some(p => p.sem===sem && p.sub===sub)) {
-      const key = `${sem} — ${sub}`;
-      (byGroup[key] ||= []).push(f);
-    }
-  });
-
-  const parse = (s)=> Date.parse(s) || Infinity;
-  Object.values(byGroup).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
-
-  cardsRoot.innerHTML='';
-  Object.keys(byGroup).sort().forEach(groupKey=>{
-    const [semLabel, subLabel] = groupKey.split(' — ');
-    const groupDiv=document.createElement('div'); groupDiv.className='card-group';
-    groupDiv.innerHTML=`<div class="card-group-title">${colorDot(subColor[subLabel]||'#ccc')} ${semLabel} · ${subLabel}</div>`;
-
-    byGroup[groupKey].forEach(f=>{
-      const p=f.properties;
-      const card=document.createElement('div'); card.className='card';
-      card.dataset.name = p.name;
-      card.dataset.semester = p.semester;
-      card.innerHTML=`
-        <div class="card-title">${p.name}</div>
-        <div class="card-sub">${p.location}</div>
-        <div class="card-dates">${p.start} → ${p.end}</div>
-        ${p.link ? `<a class="card-link" href="${p.link}" target="_blank" rel="noopener">Open website ↗</a>` : ``}
-      `;
-      card.addEventListener('click', ()=> openPopupAndSelectCard(f, p));
-      groupDiv.appendChild(card);
-    });
-    cardsRoot.appendChild(groupDiv);
-  });
-}
   </script>
 </body>
 </html>
