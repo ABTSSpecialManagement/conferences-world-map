@@ -154,6 +154,9 @@
       if (activeCard)  { activeCard.classList.remove('selected'); activeCard = null; }
     }
 
+    // ✅ Pardot link to special-case
+    const PARDOT = 'https://go.pardot.com/l/1075812/2025-08-07/kcd92j';
+
     // City dictionary
     const cityCoords = {
       "San Francisco": [-122.4194, 37.7749],
@@ -205,13 +208,13 @@
       "Queensland": [153.0251, -27.4698],
       "Marseilles": [5.3698, 43.2965],
       "Marseille": [5.3698, 43.2965],
-      "Seoul": [126.9780, 37.5665],
+      "Seoul": [126.978, 37.5665],
       "Hiroshima": [132.4553, 34.3853],
       "Vienna": [16.3738, 48.2082],
       "Thessaloniki": [22.9444, 40.6401],
       "Madrid": [-3.7038, 40.4168],
       "Las Vegas": [-115.1398, 36.1699],
-      "Atlanta": [-84.3880, 33.7490],
+      "Atlanta": [-84.388, 33.749],
       "Boston": [-71.0589, 42.3601],
       "San Diego County": [-117.1611, 32.7157]
     };
@@ -435,7 +438,15 @@
         map.easeTo({ center: feature.geometry.coordinates, duration: 800, pitch: 0, bearing: 0 });
       }
 
-      const linkHTML = props.link ? `<div style="margin-top:6px"><a href="${props.link}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">Visit website</a></div>` : '';
+      // ✅ Swap Pardot link to email in popup
+      let href = props.link || '';
+      let label = 'Visit website';
+      if (href && href.trim().toLowerCase() === PARDOT.toLowerCase()) {
+        href = 'mailto:sgm@abts.com';
+        label = 'send email';
+      }
+      const linkHTML = href ? `<div style="margin-top:6px"><a href="${href}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">${label}</a></div>` : '';
+
       const popup = new mapboxgl.Popup()
         .setLngLat(feature.geometry.coordinates)
         .setHTML(`
@@ -522,13 +533,22 @@
 
         bySub[subLabel].forEach(f=>{
           const p=f.properties;
+
+          // ✅ Swap Pardot link to email in card list
+          let href = p.link || '';
+          let label = 'Visit website';
+          if (href && href.trim().toLowerCase() === PARDOT.toLowerCase()) {
+            href = 'mailto:sgm@abts.com';
+            label = 'send email';
+          }
+
           const card=document.createElement('div'); card.className='card';
           card.dataset.uid = p.uid;
           card.innerHTML=`
             <div class="card-title">${p.name}</div>
             <div class="card-sub">${p.location}</div>
             <div class="card-dates">${p.start} → ${p.end}</div>
-            ${p.link ? `<a class="card-link" href="${p.link}" target="_blank" rel="noopener">Visit website</a>` : ``}
+            ${href ? `<a class="card-link" href="${href}" target="_blank" rel="noopener">${label}</a>` : ``}
           `;
           card.addEventListener('click', ()=> openPopupAndSelectCard(f, p));
           groupDiv.appendChild(card);
