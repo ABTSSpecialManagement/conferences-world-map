@@ -329,7 +329,7 @@
 
         const uid = [name, start || 'TBA', cityRaw || 'TBA', link || ''].join('|');
 
-        // Build a lowercase "haystack" for free-text search
+        // lowercase haystack for free-text search
         const hay = [
           sub, name, full, cityRaw, start || '', end || '', link || ''
         ].join(' | ').toLowerCase();
@@ -343,7 +343,7 @@
             end: end || 'TBA',
             link,
             uid,
-            hay // 🔎 used for search
+            hay
           },
           geometry:{ type:'Point', coordinates: coords }
         });
@@ -383,7 +383,7 @@
       } catch(e) {}
 
       map.on('click','conferences-layer',(e)=>{
-        const f = e.features[0], p = f.properties;
+        const f = e.features[0], p = e.features[0].properties;
         openPopupAndSelectCard(f, p);
       });
 
@@ -555,32 +555,46 @@
       const selectedSubs = [...document.querySelectorAll('#filters input[data-sub]:checked')]
         .map(i => i.dataset.sub);
 
-      // No subs selected -> nothing shows
-      if (selectedSubs.length===0){
-        if (map.getLayer('conferences-layer')){
-          map.setFilter('conferences-layer',['==',['get','subcategory'],'__none__']);
-        }
-        closeActiveUI();
-        cardsRoot.innerHTML='';
-        return;
+      // Build Mapbox filter and card data based on selections
+      let mapFilter, bySub = {};
+
+      if (selectedSubs.length === 0 && !q) {
+        // nothing selected and no query -> show nothing
+        mapFilter = ['==', ['get','subcategory'], '__none__'];
+      } else if (selectedSubs.length === 0 && q) {
+        // no subs selected, but we have a query -> search across ALL subs
+        mapFilter = ['in', q, ['downcase',['get','hay']]];
+        features.forEach(f=>{
+          const p = f.properties;
+          if (q && !p.hay.includes(q)) return;
+          (bySub[p.subcategory] ||= []).push(f);
+        });
+      } else if (selectedSubs.length > 0 && !q) {
+        // subs only
+        mapFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
+        features.forEach(f=>{
+          const p = f.properties;
+          if (!selectedSubs.includes(p.subcategory)) return;
+          (bySub[p.subcategory] ||= []).push(f);
+        });
+      } else {
+        // subs + query
+        const subsFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
+        const textFilter = ['in', q, ['downcase',['get','hay']]];
+        mapFilter = ['all', subsFilter, textFilter];
+        features.forEach(f=>{
+          const p = f.properties;
+          if (!selectedSubs.includes(p.subcategory)) return;
+          if (!p.hay.includes(q)) return;
+          (bySub[p.subcategory] ||= []).push(f);
+        });
       }
 
-      // Mapbox filter: (subcategory in selected) AND (q in hay) if q
-      const subsFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
-      const textFilter = q ? ['in', q, ['downcase',['get','hay']]] : true;
+      if (map.getLayer('conferences-layer')) {
+        map.setFilter('conferences-layer', mapFilter);
+      }
 
-      const finalFilter = q ? ['all', subsFilter, textFilter] : subsFilter;
-      map.setFilter('conferences-layer', finalFilter);
-
-      // Build cards grouped by sub for items that match both filters
-      const bySub = {};
-      features.forEach(f=>{
-        const p = f.properties;
-        if (!selectedSubs.includes(p.subcategory)) return;
-        if (q && !p.hay.includes(q)) return; // text match
-        (bySub[p.subcategory] ||= []).push(f);
-      });
-
+      // Sort and render cards
       const parse = (s)=> Date.parse(s) || Infinity;
       Object.values(bySub).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
 
@@ -613,6 +627,11 @@
         });
         cardsRoot.appendChild(groupDiv);
       });
+
+      // If there are no matches, clear the right panel
+      if (!Object.keys(bySub).length) {
+        cardsRoot.innerHTML = '';
+      }
     }
 
     // Small debounce helper
