@@ -64,6 +64,15 @@
     }
     #clear-btn:hover { background:#1E88BD; border-color:#1E88BD; }
 
+    /* Search box */
+    .search-wrap { margin: 8px 0 8px; }
+    #search {
+      width:100%; padding:10px 12px; font-family: var(--font);
+      border:1px solid #cfd9e3; border-radius:8px; font-size:14px;
+      outline: none;
+    }
+    #search:focus { border-color:#4a90e2; box-shadow:0 0 0 2px rgba(74,144,226,0.15); }
+
     .mapboxgl-popup, .mapboxgl-popup * { font-family: var(--font); }
 
     /* Brand header in the left sidebar */
@@ -72,10 +81,7 @@
       padding:12px 8px 14px; border-bottom:1px solid #eee; margin-bottom:6px;
     }
     #brand .brand-logo { width:180px; height:80px; object-fit:contain; }
-    /* Replaced bold title with a softer note */
-    #brand .brand-note {
-      font-size:14px; font-weight:400; color:#555; text-align:center;
-    }
+    #brand .brand-note { font-size:14px; font-weight:400; color:#555; text-align:center; }
 
     /* -------- Mobile top bar + drawers -------- */
     #topbar {
@@ -92,16 +98,12 @@
     }
     #topbar .tb-btn:active { transform: translateY(1px); }
 
-    /* Scrim behind drawers */
     #scrim { display:none; position: fixed; inset: 52px 0 0 0; background: rgba(0,0,0,.28); z-index: 10; }
     #scrim.show { display:block; }
 
-    /* Mobile layout */
     @media (max-width: 900px) {
       #topbar { display:flex; padding-top: env(safe-area-inset-top); height: calc(52px + env(safe-area-inset-top)); }
-      #map { top: calc(52px + env(safe-area-inset-top)); left: 0; right: 0; } /* map below the topbar */
-
-      /* Turn side panels into drawers */
+      #map { top: calc(52px + env(safe-area-inset-top)); left: 0; right: 0; }
       #menu, #cards-panel {
         position: fixed; top: calc(52px + env(safe-area-inset-top)); bottom: 0;
         width: 88vw; max-width: 420px; background: #fff; z-index: 11;
@@ -111,12 +113,8 @@
       #menu.open  { transform: translateX(0); }
       #cards-panel       { right: 0; transform: translateX(100%); }
       #cards-panel.open  { transform: translateX(0); }
-
-      /* Tighter paddings on small screens */
       #menu, #cards-panel { padding: 14px 12px; }
       .section-title { margin-top: 8px; }
-
-      /* Larger tap targets */
       .checkbox-row { padding:6px 4px; }
       .card { padding:12px; }
       .btn { width:100%; }
@@ -138,6 +136,11 @@
     <div id="brand">
       <img class="brand-logo" src="ABTSx4.png" alt="Logo">
       <div class="brand-note">Please select which specialty you would want to view below.</div>
+    </div>
+
+    <!-- 🔎 Search -->
+    <div class="search-wrap">
+      <input id="search" type="search" placeholder="Search conferences, cities, dates, links…">
     </div>
 
     <!-- Buttons above the list -->
@@ -175,7 +178,6 @@
       if (activeCard)  { activeCard.classList.remove('selected'); activeCard = null; }
     }
 
-    // Pardot link to special-case
     const PARDOT = 'https://go.pardot.com/l/1075812/2025-08-07/kcd92j';
 
     // City dictionary
@@ -257,11 +259,11 @@
       "#2b908f","#ff7f0e","#1f77b4","#2ca02c","#d62728","#9467bd"
     ];
 
-    // Map init (shifted east toward Europe + Asia)
+    // Map init (centered toward Europe + Asia)
     const map = new mapboxgl.Map({
       container:'map',
       style:'mapbox://styles/mapbox/streets-v12',
-      center:[60, 34],   // ⬅️ moved east from [10,35] to reduce Africa in frame
+      center:[60, 34],
       zoom:2.2,
       projection:'mercator'
     });
@@ -273,7 +275,7 @@
     const cardsRoot   = document.getElementById('cards');
     let initialized = false;
 
-    // Load data from JSON (semester field is ignored)
+    // Load data
     fetch('conferences_2026.updated.json')
       .then(r => r.json())
       .then(json => {
@@ -305,7 +307,7 @@
       return s;
     }
 
-    // Convert JSON rows to GeoJSON features (no semester used anymore)
+    // Convert JSON rows to GeoJSON features
     function jsonToFeatures(rows){
       const feats = [];
       for (const r of rows){
@@ -327,6 +329,11 @@
 
         const uid = [name, start || 'TBA', cityRaw || 'TBA', link || ''].join('|');
 
+        // Build a lowercase "haystack" for free-text search
+        const hay = [
+          sub, name, full, cityRaw, start || '', end || '', link || ''
+        ].join(' | ').toLowerCase();
+
         feats.push({
           type:'Feature',
           properties:{
@@ -335,7 +342,8 @@
             start: start || 'TBA',
             end: end || 'TBA',
             link,
-            uid
+            uid,
+            hay // 🔎 used for search
           },
           geometry:{ type:'Point', coordinates: coords }
         });
@@ -363,17 +371,16 @@
 
       buildSidebar();
 
-      // ✅ Pre-select all subs on load
+      // Pre-select all subs on load
       document.querySelectorAll('#filters input[type=checkbox]').forEach(cb => cb.checked = true);
       applyFilters();
 
-      // Optionally fit bounds to all points but bias view eastward
+      // Fit bounds to all points with east bias
       try {
         const b = new mapboxgl.LngLatBounds();
         features.forEach(f => b.extend(f.geometry.coordinates));
-        // Add padding and a slight eastward offset so Africa is less prominent
         map.fitBounds(b, { padding: {top: 40, bottom: 40, left: 80, right: 200}, maxZoom: 4 });
-      } catch(e) { /* no-op if bounds fail */ }
+      } catch(e) {}
 
       map.on('click','conferences-layer',(e)=>{
         const f = e.features[0], p = f.properties;
@@ -392,7 +399,7 @@
         }
       });
 
-      // ---- Mobile drawers (filters & selected) with ✕ toggles ----
+      // ---- Mobile drawers ----
       const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
       const topbarFiltersBtn = document.getElementById('btn-filters');
       const topbarCardsBtn   = document.getElementById('btn-cards');
@@ -400,7 +407,7 @@
       const menuEl           = document.getElementById('menu');
       const cardsEl          = document.getElementById('cards-panel');
 
-      let openDrawerName = null; // 'filters' | 'cards' | null
+      let openDrawerName = null;
 
       function setTopbarUI(){
         topbarFiltersBtn.textContent = (openDrawerName === 'filters') ? '✕' : 'Filters';
@@ -438,11 +445,16 @@
       scrim.addEventListener('click', closeDrawers);
       window.addEventListener('resize', ()=> { if (!isMobile()) closeDrawers(); });
 
-      // expose to other functions (e.g., after selecting a card)
       window.__closeDrawersIfMobile = function(){
         if (isMobile() && openDrawerName) closeDrawers();
       };
       setTopbarUI();
+
+      // 🔎 Search interactions
+      const searchEl = document.getElementById('search');
+      const debounced = debounce(() => { closeActiveUI(); applyFilters(); }, 200);
+      searchEl.addEventListener('input', debounced);
+      searchEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); debounced(); } });
     }
 
     function openPopupAndSelectCard(feature, props){
@@ -514,7 +526,6 @@
       const filtersRoot = document.getElementById('filters');
       filtersRoot.innerHTML=''; filtersRoot.appendChild(wrapper);
 
-      // Buttons
       document.getElementById('select-all-btn').addEventListener('click', ()=>{
         document.querySelectorAll('#filters input[type=checkbox]').forEach(cb=> cb.checked = true);
         closeActiveUI();
@@ -533,11 +544,18 @@
       });
     } // end buildSidebar
 
-    // Apply filters using SUBSPECIALTY only
+    // 🔎 Current normalized query
+    function getQuery(){
+      return (document.getElementById('search').value || '').trim().toLowerCase();
+    }
+
+    // Apply filters using SUBSPECIALTY + SEARCH
     function applyFilters(){
+      const q = getQuery();
       const selectedSubs = [...document.querySelectorAll('#filters input[data-sub]:checked')]
         .map(i => i.dataset.sub);
 
+      // No subs selected -> nothing shows
       if (selectedSubs.length===0){
         if (map.getLayer('conferences-layer')){
           map.setFilter('conferences-layer',['==',['get','subcategory'],'__none__']);
@@ -547,18 +565,20 @@
         return;
       }
 
-      // Mapbox filter: OR of (subcategory == selected)
-      const filter = ['any'];
-      selectedSubs.forEach(sub => filter.push(['==', ['get','subcategory'], sub]));
-      map.setFilter('conferences-layer', filter);
+      // Mapbox filter: (subcategory in selected) AND (q in hay) if q
+      const subsFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
+      const textFilter = q ? ['in', q, ['downcase',['get','hay']]] : true;
 
-      // Build cards grouped by sub
+      const finalFilter = q ? ['all', subsFilter, textFilter] : subsFilter;
+      map.setFilter('conferences-layer', finalFilter);
+
+      // Build cards grouped by sub for items that match both filters
       const bySub = {};
       features.forEach(f=>{
-        const sub = f.properties.subcategory;
-        if (selectedSubs.includes(sub)) {
-          (bySub[sub] ||= []).push(f);
-        }
+        const p = f.properties;
+        if (!selectedSubs.includes(p.subcategory)) return;
+        if (q && !p.hay.includes(q)) return; // text match
+        (bySub[p.subcategory] ||= []).push(f);
       });
 
       const parse = (s)=> Date.parse(s) || Infinity;
@@ -593,6 +613,11 @@
         });
         cardsRoot.appendChild(groupDiv);
       });
+    }
+
+    // Small debounce helper
+    function debounce(fn, wait=200){
+      let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); };
     }
   </script>
 </body>
