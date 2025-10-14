@@ -47,22 +47,35 @@
     #view-toggle label { font-size:13px; display:flex; align-items:center; gap:6px; }
     #view-toggle input { accent-color:#4a90e2; }
 
-    #clear-btn {
+    /* Buttons */
+    .btn-row { display:flex; gap:8px; margin:10px 0 6px; }
+    .btn {
       font-family: var(--font) !important;
-      color:#fff; margin-top: 20px; padding: 10px 10px; font-size: 16px;
-      border: 1px solid #2B7DA6; border-radius: 6px; background: #2B7DA6; cursor: pointer;
+      padding:10px 12px; font-size:14px; line-height:1;
+      border-radius:6px; cursor:pointer; border:1px solid transparent;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
     }
-    #clear-btn:hover { background: #1E88BD; border: 1px solid #1E88BD; }
+    #select-all-btn {
+      background:#fff; border-color:#cfd9e3; color:#1f2d3d;
+    }
+    #select-all-btn:hover { background:#f5f8fb; border-color:#b9c8d8; }
+    #clear-btn {
+      color:#fff; background:#2B7DA6; border:1px solid #2B7DA6;
+    }
+    #clear-btn:hover { background:#1E88BD; border-color:#1E88BD; }
 
     .mapboxgl-popup, .mapboxgl-popup * { font-family: var(--font); }
 
     /* Brand header in the left sidebar */
     #brand {
       display:flex; flex-direction:column; align-items:center; gap:8px;
-      padding:12px 8px 14px; border-bottom:1px solid #eee; margin-bottom:10px;
+      padding:12px 8px 14px; border-bottom:1px solid #eee; margin-bottom:6px;
     }
     #brand .brand-logo { width:180px; height:80px; object-fit:contain; }
-    #brand .brand-name { font-family: var(--font); font-size:18px; font-weight:700; letter-spacing:.2px; }
+    /* Replaced bold title with a softer note */
+    #brand .brand-note {
+      font-size:14px; font-weight:400; color:#555; text-align:center;
+    }
 
     /* -------- Mobile top bar + drawers -------- */
     #topbar {
@@ -106,6 +119,8 @@
       /* Larger tap targets */
       .checkbox-row { padding:6px 4px; }
       .card { padding:12px; }
+      .btn { width:100%; }
+      .btn-row { flex-direction:column; }
     }
   </style>
 </head>
@@ -122,11 +137,17 @@
   <div id="menu">
     <div id="brand">
       <img class="brand-logo" src="ABTSx4.png" alt="Logo">
-      <div class="brand-name">Conferences Map</div>
+      <div class="brand-note">Please select which specialty you would want to view below.</div>
     </div>
+
+    <!-- Buttons moved above the list -->
+    <div class="btn-row">
+      <button id="select-all-btn" class="btn" type="button">Select all</button>
+      <button id="clear-btn" class="btn" type="button">Clear All</button>
+    </div>
+
     <div class="section-title">Subspecialties (A–Z)</div>
     <div id="filters"></div>
-    <button id="clear-btn">Clear All</button>
   </div>
 
   <div id="map"></div>
@@ -154,7 +175,7 @@
       if (activeCard)  { activeCard.classList.remove('selected'); activeCard = null; }
     }
 
-    // ✅ Pardot link to special-case
+    // Pardot link to special-case
     const PARDOT = 'https://go.pardot.com/l/1075812/2025-08-07/kcd92j';
 
     // City dictionary
@@ -438,7 +459,7 @@
         map.easeTo({ center: feature.geometry.coordinates, duration: 800, pitch: 0, bearing: 0 });
       }
 
-      // ✅ Swap Pardot link to email in popup
+      // Swap Pardot link to email in popup
       let href = props.link || '';
       let label = 'Visit website';
       if (href && href.trim().toLowerCase() === PARDOT.toLowerCase()) {
@@ -479,17 +500,23 @@
         wrapper.appendChild(row);
       });
 
+      const filtersRoot = document.getElementById('filters');
       filtersRoot.innerHTML=''; filtersRoot.appendChild(wrapper);
 
-      filtersRoot.addEventListener('change', ()=>{
+      // Buttons
+      document.getElementById('select-all-btn').addEventListener('click', ()=>{
+        document.querySelectorAll('#filters input[type=checkbox]').forEach(cb=> cb.checked = true);
         closeActiveUI();
         applyFilters();
       });
 
-      document.getElementById('clear-btn').addEventListener('click',()=>{
-        filtersRoot.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-          cb.checked=false;
-        });
+      document.getElementById('clear-btn').addEventListener('click', ()=>{
+        document.querySelectorAll('#filters input[type=checkbox]').forEach(cb=> cb.checked = false);
+        closeActiveUI();
+        applyFilters();
+      });
+
+      filtersRoot.addEventListener('change', ()=>{
         closeActiveUI();
         applyFilters();
       });
@@ -497,7 +524,7 @@
 
     // Apply filters using SUBSPECIALTY only
     function applyFilters(){
-      const selectedSubs = [...filtersRoot.querySelectorAll('input[data-sub]:checked')]
+      const selectedSubs = [...document.querySelectorAll('#filters input[data-sub]:checked')]
         .map(i => i.dataset.sub);
 
       if (selectedSubs.length===0){
@@ -529,12 +556,13 @@
       cardsRoot.innerHTML='';
       Object.keys(bySub).sort((a,b)=>a.localeCompare(b)).forEach(subLabel=>{
         const groupDiv=document.createElement('div'); groupDiv.className='card-group';
-        groupDiv.innerHTML=`<div class="card-group-title">${colorDot(subColor[subLabel]||'#ccc')} ${subLabel}</div>`;
+        groupDiv.innerHTML = `<div class="card-group-title">${colorDot(subColor[subLabel] || '#ccc')} ${subLabel}</div>`;
+
 
         bySub[subLabel].forEach(f=>{
           const p=f.properties;
 
-          // ✅ Swap Pardot link to email in card list
+          // Swap Pardot link to email in card list
           let href = p.link || '';
           let label = 'Visit website';
           if (href && href.trim().toLowerCase() === PARDOT.toLowerCase()) {
