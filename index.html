@@ -83,6 +83,12 @@
     #brand .brand-logo { width:180px; height:80px; object-fit:contain; }
     #brand .brand-note { font-size:14px; font-weight:400; color:#555; text-align:center; }
 
+    /* Helper note under filters */
+    .filters-note {
+      margin-top:10px; font-size:13px; color:#555; line-height:1.35;
+    }
+    .filters-note a { text-decoration: underline; color:#1f6feb; }
+
     /* -------- Mobile top bar + drawers -------- */
     #topbar {
       position: fixed; top: 0; left: 0; right: 0; height: 52px;
@@ -151,6 +157,10 @@
 
     <div class="section-title">Subspecialties (A–Z)</div>
     <div id="filters"></div>
+    <!-- New helper note under the checkboxes -->
+    <p class="filters-note">
+      If you do not see the conference you are looking for <a href="https://abtscs.com/" target="_blank" rel="noopener">contact us</a> directly.
+    </p>
   </div>
 
   <div id="map"></div>
