@@ -140,7 +140,7 @@
       <div class="brand-note">Please select which specialty you would want to view below.</div>
     </div>
 
-    <!-- Buttons moved above the list -->
+    <!-- Buttons above the list -->
     <div class="btn-row">
       <button id="select-all-btn" class="btn" type="button">Select All</button>
       <button id="clear-btn" class="btn" type="button">Clear All</button>
@@ -257,11 +257,11 @@
       "#2b908f","#ff7f0e","#1f77b4","#2ca02c","#d62728","#9467bd"
     ];
 
-    // Map init (single colorful style)
+    // Map init (shifted east toward Europe + Asia)
     const map = new mapboxgl.Map({
       container:'map',
       style:'mapbox://styles/mapbox/streets-v12',
-      center:[10,35],
+      center:[60, 34],   // ⬅️ moved east from [10,35] to reduce Africa in frame
       zoom:2.2,
       projection:'mercator'
     });
@@ -362,7 +362,18 @@
       });
 
       buildSidebar();
-      applyFilters(); // nothing selected initially
+
+      // ✅ Pre-select all subs on load
+      document.querySelectorAll('#filters input[type=checkbox]').forEach(cb => cb.checked = true);
+      applyFilters();
+
+      // Optionally fit bounds to all points but bias view eastward
+      try {
+        const b = new mapboxgl.LngLatBounds();
+        features.forEach(f => b.extend(f.geometry.coordinates));
+        // Add padding and a slight eastward offset so Africa is less prominent
+        map.fitBounds(b, { padding: {top: 40, bottom: 40, left: 80, right: 200}, maxZoom: 4 });
+      } catch(e) { /* no-op if bounds fail */ }
 
       map.on('click','conferences-layer',(e)=>{
         const f = e.features[0], p = f.properties;
@@ -557,7 +568,6 @@
       Object.keys(bySub).sort((a,b)=>a.localeCompare(b)).forEach(subLabel=>{
         const groupDiv=document.createElement('div'); groupDiv.className='card-group';
         groupDiv.innerHTML = `<div class="card-group-title">${colorDot(subColor[subLabel] || '#ccc')} ${subLabel}</div>`;
-
 
         bySub[subLabel].forEach(f=>{
           const p=f.properties;
