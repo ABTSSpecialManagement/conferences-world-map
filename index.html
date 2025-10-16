@@ -11,16 +11,8 @@
     * { box-sizing: border-box; }
     body { margin:0; font-family: var(--font); }
     #map { position: absolute; top:0; bottom:0; left: var(--sidebar-w); right: var(--right-w); }
-    #menu {
-      position: absolute; top:0; left:0; bottom:0;
-      width: var(--sidebar-w); overflow:auto; background:#fff;
-      padding:16px 14px; border-right:1px solid #e6e6e6;
-    }
-    #cards-panel {
-      position: absolute; top:0; right:0; bottom:0;
-      width: var(--right-w); overflow:auto; background:#fafafa;
-      border-left:1px solid #e6e6e6; padding:16px 14px;
-    }
+    #menu { position: absolute; top:0; left:0; bottom:0; width: var(--sidebar-w); overflow:auto; background:#fff; padding:16px 14px; border-right:1px solid #e6e6e6; }
+    #cards-panel { position: absolute; top:0; right:0; bottom:0; width: var(--right-w); overflow:auto; background:#fafafa; border-left:1px solid #e6e6e6; padding:16px 14px; }
     .section-title { font-size:14px; font-weight:700; margin:12px 0 6px; }
     .checkbox-row { display:flex; align-items:center; gap:8px; font-size:14px; padding:4px 2px; border-radius:8px; }
     .checkbox-row:hover { background:#f7f7f7; }
@@ -28,11 +20,7 @@
 
     .card-group { margin-bottom:16px; }
     .card-group-title { font-size:13px; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
-    .card {
-      background:white; border:1px solid #ddd; border-radius:10px;
-      padding:10px 12px; margin-bottom:8px; box-shadow:0 1px 2px rgba(0,0,0,0.05);
-      cursor:pointer; transition: background 0.2s, border-color 0.2s;
-    }
+    .card { background:white; border:1px solid #ddd; border-radius:10px; padding:10px 12px; margin-bottom:8px; box-shadow:0 1px 2px rgba(0,0,0,0.05); cursor:pointer; transition: background 0.2s, border-color 0.2s; }
     .card:hover { background:#f2f7ff; border-color:#aac8ff; }
     .card.selected { background:#e6f0ff; border-color:#4a90e2; box-shadow:0 0 0 2px rgba(74,144,226,0.4); }
     .card-title { font-size:14px; font-weight:600; }
@@ -40,85 +28,45 @@
     .card-dates { font-size:12px; color:#444; margin-top:4px; }
     .card-link { display:inline-block; font-size:12px; margin-top:6px; text-decoration:underline; color:#1f6feb; }
 
-    #view-toggle {
-      display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:8px 10px;
-      background:#fff; border:1px solid #e6e6e6; border-radius:10px;
-    }
+    #view-toggle { display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:8px 10px; background:#fff; border:1px solid #e6e6e6; border-radius:10px; }
     #view-toggle label { font-size:13px; display:flex; align-items:center; gap:6px; }
     #view-toggle input { accent-color:#4a90e2; }
 
-    /* Buttons */
     .btn-row { display:flex; gap:8px; margin:10px 0 6px; }
-    .btn {
-      font-family: var(--font) !important;
-      padding:10px 12px; font-size:14px; line-height:1;
-      border-radius:6px; cursor:pointer; border:1px solid transparent;
-      transition: background .15s ease, border-color .15s ease, color .15s ease;
-    }
-    #select-all-btn {
-      background:#fff; border-color:#cfd9e3; color:#1f2d3d;
-    }
+    .btn { font-family: var(--font) !important; padding:10px 12px; font-size:14px; line-height:1; border-radius:6px; cursor:pointer; border:1px solid transparent; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+    #select-all-btn { background:#fff; border-color:#cfd9e3; color:#1f2d3d; }
     #select-all-btn:hover { background:#f5f8fb; border-color:#b9c8d8; }
-    #clear-btn {
-      color:#fff; background:#2B7DA6; border:1px solid #2B7DA6;
-    }
+    #clear-btn { color:#fff; background:#2B7DA6; border:1px solid #2B7DA6; }
     #clear-btn:hover { background:#1E88BD; border-color:#1E88BD; }
 
-    /* Search box */
     .search-wrap { margin: 8px 0 8px; }
-    #search {
-      width:100%; padding:10px 12px; font-family: var(--font);
-      border:1px solid #cfd9e3; border-radius:8px; font-size:14px;
-      outline: none;
-    }
+    #search { width:100%; padding:10px 12px; font-family: var(--font); border:1px solid #cfd9e3; border-radius:8px; font-size:14px; outline: none; }
     #search:focus { border-color:#4a90e2; box-shadow:0 0 0 2px rgba(74,144,226,0.15); }
 
     .mapboxgl-popup, .mapboxgl-popup * { font-family: var(--font); }
 
-    /* Brand header in the left sidebar */
-    #brand {
-      display:flex; flex-direction:column; align-items:center; gap:8px;
-      padding:12px 8px 14px; border-bottom:1px solid #eee; margin-bottom:6px;
-    }
+    #brand { display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px 8px 14px; border-bottom:1px solid #eee; margin-bottom:6px; }
     #brand .brand-logo { width:180px; height:80px; object-fit:contain; }
     #brand .brand-note { font-size:14px; font-weight:400; color:#555; text-align:center; }
 
-    /* Helper note under filters */
-    .filters-note {
-      margin-top:10px; font-size:13px; color:#555; line-height:1.35;
-    }
+    .filters-note { margin-top:10px; font-size:13px; color:#555; line-height:1.35; }
     .filters-note a { text-decoration: underline; color:#1f6feb; }
 
-    /* -------- Mobile top bar + drawers -------- */
-    #topbar {
-      position: fixed; top: 0; left: 0; right: 0; height: 52px;
-      display: none; align-items: center; justify-content: space-between;
-      padding: 0 10px; background:#fff; border-bottom:1px solid #e6e6e6; z-index: 10;
-      font-family: var(--font);
-    }
+    #topbar { position: fixed; top: 0; left: 0; right: 0; height: 52px; display: none; align-items: center; justify-content: space-between; padding: 0 10px; background:#fff; border-bottom:1px solid #e6e6e6; z-index: 10; font-family: var(--font); }
     #topbar .tb-title { font-weight:700; letter-spacing:.2px; }
-    #topbar .tb-btn {
-      appearance: none; border:1px solid #d6d6d6; background:#fff; padding:6px 10px; border-radius:8px;
-      font-size:14px; line-height:1; cursor:pointer; min-width:84px; text-align:center;
-      transition: transform .05s ease;
-    }
+    #topbar .tb-btn { appearance: none; border:1px solid #d6d6d6; background:#fff; padding:6px 10px; border-radius:8px; font-size:14px; line-height:1; cursor:pointer; min-width:84px; text-align:center; transition: transform .05s ease; }
     #topbar .tb-btn:active { transform: translateY(1px); }
-
     #scrim { display:none; position: fixed; inset: 52px 0 0 0; background: rgba(0,0,0,.28); z-index: 10; }
     #scrim.show { display:block; }
 
     @media (max-width: 900px) {
       #topbar { display:flex; padding-top: env(safe-area-inset-top); height: calc(52px + env(safe-area-inset-top)); }
       #map { top: calc(52px + env(safe-area-inset-top)); left: 0; right: 0; }
-      #menu, #cards-panel {
-        position: fixed; top: calc(52px + env(safe-area-inset-top)); bottom: 0;
-        width: 88vw; max-width: 420px; background: #fff; z-index: 11;
-        transition: transform .25s ease; box-shadow: 0 8px 24px rgba(0,0,0,.12);
-      }
-      #menu       { left: 0;  transform: translateX(-100%); }
-      #menu.open  { transform: translateX(0); }
-      #cards-panel       { right: 0; transform: translateX(100%); }
-      #cards-panel.open  { transform: translateX(0); }
+      #menu, #cards-panel { position: fixed; top: calc(52px + env(safe-area-inset-top)); bottom: 0; width: 88vw; max-width: 420px; background: #fff; z-index: 11; transition: transform .25s ease; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+      #menu { left: 0; transform: translateX(-100%); }
+      #menu.open { transform: translateX(0); }
+      #cards-panel { right: 0; transform: translateX(100%); }
+      #cards-panel.open { transform: translateX(0); }
       #menu, #cards-panel { padding: 14px 12px; }
       .section-title { margin-top: 8px; }
       .checkbox-row { padding:6px 4px; }
@@ -141,7 +89,7 @@
   <div id="menu">
     <div id="brand">
       <img class="brand-logo" src="ABTSx4.png" alt="Logo">
-      <div class="brand-note">Select a medical specialty to explore upcoming conferences.</div>
+      <div class="brand-note">ABTS medical groups participated in the following conferences</div>
     </div>
 
     <!-- 🔎 Search -->
@@ -157,7 +105,6 @@
 
     <div class="section-title">Subspecialties (A–Z)</div>
     <div id="filters"></div>
-    <!-- New helper note under the checkboxes -->
     <p class="filters-note">
       Can’t find a specific conference? <a href="https://abtscs.com/" target="_blank" rel="noopener">Contact us</a> and we’ll help.
     </p>
@@ -188,7 +135,9 @@
       if (activeCard)  { activeCard.classList.remove('selected'); activeCard = null; }
     }
 
+    // Old Pardot (fallback guard) and new Medical Hub constants
     const PARDOT = 'https://go.pardot.com/l/1075812/2025-08-07/kcd92j';
+    const MEDHUB = 'https://medicalhub.abtscs.com/Groups.aspx';
 
     // City dictionary
     const cityCoords = {
@@ -269,7 +218,6 @@
       "#2b908f","#ff7f0e","#1f77b4","#2ca02c","#d62728","#9467bd"
     ];
 
-    // Map init (centered toward Europe + Asia)
     const map = new mapboxgl.Map({
       container:'map',
       style:'mapbox://styles/mapbox/streets-v12',
@@ -281,7 +229,6 @@
     let features = [];
     let distinctSubs = [];
     let subColor = {};
-    const filtersRoot = document.getElementById('filters');
     const cardsRoot   = document.getElementById('cards');
     let initialized = false;
 
@@ -301,7 +248,6 @@
         alert('Could not load conferences_2026.updated.json. Serve via http and check the path.');
       });
 
-    // --- Helpers: dates ---
     function normalizeDate(s){
       if (!s) return null;
       const iso = /^\d{4}-\d{2}-\d{2}$/;
@@ -317,7 +263,6 @@
       return s;
     }
 
-    // Convert JSON rows to GeoJSON features
     function jsonToFeatures(rows){
       const feats = [];
       for (const r of rows){
@@ -339,22 +284,11 @@
 
         const uid = [name, start || 'TBA', cityRaw || 'TBA', link || ''].join('|');
 
-        // lowercase haystack for free-text search
-        const hay = [
-          sub, name, full, cityRaw, start || '', end || '', link || ''
-        ].join(' | ').toLowerCase();
+        const hay = [sub, name, full, cityRaw, start || '', end || '', link || ''].join(' | ').toLowerCase();
 
         feats.push({
           type:'Feature',
-          properties:{
-            subcategory: sub,
-            name, full_name: full, location: cityRaw,
-            start: start || 'TBA',
-            end: end || 'TBA',
-            link,
-            uid,
-            hay
-          },
+          properties:{ subcategory: sub, name, full_name: full, location: cityRaw, start: start || 'TBA', end: end || 'TBA', link, uid, hay },
           geometry:{ type:'Point', coordinates: coords }
         });
       }
@@ -381,11 +315,9 @@
 
       buildSidebar();
 
-      // Pre-select all subs on load
       document.querySelectorAll('#filters input[type=checkbox]').forEach(cb => cb.checked = true);
       applyFilters();
 
-      // Fit bounds to all points with east bias
       try {
         const b = new mapboxgl.LngLatBounds();
         features.forEach(f => b.extend(f.geometry.coordinates));
@@ -404,12 +336,10 @@
           map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
           map.setFog(null);
         } else if (input.value === '3d') {
-          map.setProjection('globe');
-          map.setFog({});
+          map.setProjection('globe'); map.setFog({});
         }
       });
 
-      // ---- Mobile drawers ----
       const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
       const topbarFiltersBtn = document.getElementById('btn-filters');
       const topbarCardsBtn   = document.getElementById('btn-cards');
@@ -418,49 +348,33 @@
       const cardsEl          = document.getElementById('cards-panel');
 
       let openDrawerName = null;
-
       function setTopbarUI(){
         topbarFiltersBtn.textContent = (openDrawerName === 'filters') ? '✕' : 'Filters';
         topbarCardsBtn.textContent   = (openDrawerName === 'cards')   ? '✕' : 'Selected';
         topbarFiltersBtn.setAttribute('aria-expanded', openDrawerName === 'filters');
         topbarCardsBtn.setAttribute('aria-expanded',   openDrawerName === 'cards');
       }
-
       function openDrawer(which){
         if (!isMobile()) return;
         if (openDrawerName === which) { closeDrawers(); return; }
         if (openDrawerName === 'filters') menuEl.classList.remove('open');
         if (openDrawerName === 'cards')   cardsEl.classList.remove('open');
-
         if (which === 'filters') menuEl.classList.add('open');
         if (which === 'cards')   cardsEl.classList.add('open');
-
-        openDrawerName = which;
-        scrim.classList.add('show');
-        document.body.style.overflow='hidden';
-        setTopbarUI();
+        openDrawerName = which; scrim.classList.add('show'); document.body.style.overflow='hidden'; setTopbarUI();
       }
-
       function closeDrawers(){
         if (openDrawerName === 'filters') menuEl.classList.remove('open');
         if (openDrawerName === 'cards')   cardsEl.classList.remove('open');
-        openDrawerName = null;
-        scrim.classList.remove('show');
-        document.body.style.overflow='';
-        setTopbarUI();
+        openDrawerName = null; scrim.classList.remove('show'); document.body.style.overflow=''; setTopbarUI();
       }
-
       topbarFiltersBtn.addEventListener('click', ()=> openDrawer('filters'));
       topbarCardsBtn.addEventListener('click',   ()=> openDrawer('cards'));
       scrim.addEventListener('click', closeDrawers);
       window.addEventListener('resize', ()=> { if (!isMobile()) closeDrawers(); });
-
-      window.__closeDrawersIfMobile = function(){
-        if (isMobile() && openDrawerName) closeDrawers();
-      };
+      window.__closeDrawersIfMobile = function(){ if (isMobile() && openDrawerName) closeDrawers(); };
       setTopbarUI();
 
-      // 🔎 Search interactions
       const searchEl = document.getElementById('search');
       const debounced = debounce(() => { closeActiveUI(); applyFilters(); }, 200);
       searchEl.addEventListener('input', debounced);
@@ -480,24 +394,18 @@
 
       const viewMode = document.querySelector('input[name="mapview"]:checked').value;
       if (viewMode === '3d') {
-        map.easeTo({
-          center: feature.geometry.coordinates,
-          zoom: map.getZoom(),
-          pitch: map.getPitch(),
-          bearing: map.getBearing(),
-          duration: 1500,
-          essential: true
-        });
+        map.easeTo({ center: feature.geometry.coordinates, zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), duration: 1500, essential: true });
       } else {
         map.easeTo({ center: feature.geometry.coordinates, duration: 800, pitch: 0, bearing: 0 });
       }
 
-      // Swap Pardot link to email in popup
+      // Link labeling rules
       let href = props.link || '';
-      let label = 'Visit website';
-      if (href && href.trim().toLowerCase() === PARDOT.toLowerCase()) {
-        href = 'mailto:sgm@abts.com';
-        label = 'send email';
+      let label = 'Visit Official Housing Website';
+      if (href) {
+        const low = href.trim().toLowerCase();
+        if (low === PARDOT.toLowerCase()) { href = MEDHUB; label = 'Request Housing'; }
+        else if (low === MEDHUB.toLowerCase()) { label = 'Request Housing'; }
       }
       const linkHTML = href ? `<div style="margin-top:6px"><a href="${href}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">${label}</a></div>` : '';
 
@@ -513,15 +421,11 @@
         .addTo(map);
 
       activePopup = popup;
-      popup.on('close', ()=>{
-        if (activeCard) activeCard.classList.remove('selected');
-        activeCard = null; activePopup = null;
-      });
+      popup.on('close', ()=>{ if (activeCard) activeCard.classList.remove('selected'); activeCard = null; activePopup = null; });
 
       if (window.__closeDrawersIfMobile) window.__closeDrawersIfMobile();
     }
 
-    // Sidebar (A–Z subspecialties only)
     function colorDot(c){ return `<span class="dot" style="background:${c}"></span>`; }
 
     function buildSidebar(){
@@ -538,116 +442,80 @@
 
       document.getElementById('select-all-btn').addEventListener('click', ()=>{
         document.querySelectorAll('#filters input[type=checkbox]').forEach(cb=> cb.checked = true);
-        closeActiveUI();
-        applyFilters();
+        closeActiveUI(); applyFilters();
       });
 
       document.getElementById('clear-btn').addEventListener('click', ()=>{
         document.querySelectorAll('#filters input[type=checkbox]').forEach(cb=> cb.checked = false);
-        closeActiveUI();
-        applyFilters();
+        closeActiveUI(); applyFilters();
       });
 
-      filtersRoot.addEventListener('change', ()=>{
-        closeActiveUI();
-        applyFilters();
-      });
-    } // end buildSidebar
-
-    // 🔎 Current normalized query
-    function getQuery(){
-      return (document.getElementById('search').value || '').trim().toLowerCase();
+      filtersRoot.addEventListener('change', ()=>{ closeActiveUI(); applyFilters(); });
     }
 
-    // Apply filters using SUBSPECIALTY + SEARCH
+    function getQuery(){ return (document.getElementById('search').value || '').trim().toLowerCase(); }
+
     function applyFilters(){
-      const q = getQuery();
-      const selectedSubs = [...document.querySelectorAll('#filters input[data-sub]:checked')]
-        .map(i => i.dataset.sub);
+  const q = getQuery();
+  const selectedSubs = [...document.querySelectorAll('#filters input[data-sub]:checked')]
+    .map(i => i.dataset.sub);
 
-      // Build Mapbox filter and card data based on selections
-      let mapFilter, bySub = {};
+  let mapFilter, bySub = {};
 
-      if (selectedSubs.length === 0 && !q) {
-        // nothing selected and no query -> show nothing
-        mapFilter = ['==', ['get','subcategory'], '__none__'];
-      } else if (selectedSubs.length === 0 && q) {
-        // no subs selected, but we have a query -> search across ALL subs
-        mapFilter = ['in', q, ['downcase',['get','hay']]];
-        features.forEach(f=>{
-          const p = f.properties;
-          if (q && !p.hay.includes(q)) return;
-          (bySub[p.subcategory] ||= []).push(f);
-        });
-      } else if (selectedSubs.length > 0 && !q) {
-        // subs only
-        mapFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
-        features.forEach(f=>{
-          const p = f.properties;
-          if (!selectedSubs.includes(p.subcategory)) return;
-          (bySub[p.subcategory] ||= []).push(f);
-        });
-      } else {
-        // subs + query
-        const subsFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
-        const textFilter = ['in', q, ['downcase',['get','hay']]];
-        mapFilter = ['all', subsFilter, textFilter];
-        features.forEach(f=>{
-          const p = f.properties;
-          if (!selectedSubs.includes(p.subcategory)) return;
-          if (!p.hay.includes(q)) return;
-          (bySub[p.subcategory] ||= []).push(f);
-        });
-      }
+  if (selectedSubs.length === 0 && !q) {
+    mapFilter = ['==', ['get','subcategory'], '__none__'];
+  } else if (selectedSubs.length === 0 && q) {
+    mapFilter = ['in', q, ['downcase',['get','hay']]];
+    features.forEach(f=>{ const p=f.properties; if (p.hay.includes(q)) (bySub[p.subcategory] ||= []).push(f); });
+  } else if (selectedSubs.length > 0 && !q) {
+    mapFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
+    features.forEach(f=>{ const p=f.properties; if (selectedSubs.includes(p.subcategory)) (bySub[p.subcategory] ||= []).push(f); });
+  } else {
+    const subsFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
+    const textFilter = ['in', q, ['downcase',['get','hay']]];
+    mapFilter = ['all', subsFilter, textFilter];
+    features.forEach(f=>{ const p=f.properties; if (selectedSubs.includes(p.subcategory) && p.hay.includes(q)) (bySub[p.subcategory] ||= []).push(f); });
+  }
 
-      if (map.getLayer('conferences-layer')) {
-        map.setFilter('conferences-layer', mapFilter);
-      }
+  if (map.getLayer('conferences-layer')) map.setFilter('conferences-layer', mapFilter);
 
-      // Sort and render cards
-      const parse = (s)=> Date.parse(s) || Infinity;
-      Object.values(bySub).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
+  const parse = (s)=> Date.parse(s) || Infinity;
+  Object.values(bySub).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
 
-      cardsRoot.innerHTML='';
-      Object.keys(bySub).sort((a,b)=>a.localeCompare(b)).forEach(subLabel=>{
-        const groupDiv=document.createElement('div'); groupDiv.className='card-group';
-        groupDiv.innerHTML = `<div class="card-group-title">${colorDot(subColor[subLabel] || '#ccc')} ${subLabel}</div>`;
+  // use the top-level cardsRoot here
+  cardsRoot.innerHTML='';
+  Object.keys(bySub).sort((a,b)=>a.localeCompare(b)).forEach(subLabel=>{
+    const groupDiv=document.createElement('div'); groupDiv.className='card-group';
+    groupDiv.innerHTML = `<div class="card-group-title">${colorDot(subColor[subLabel] || '#ccc')} ${subLabel}</div>`;
 
-        bySub[subLabel].forEach(f=>{
-          const p=f.properties;
+    bySub[subLabel].forEach(f=>{
+      const p=f.properties;
 
-          // Swap Pardot link to email in card list
-          let href = p.link || '';
-          let label = 'Visit website';
-          if (href && href.trim().toLowerCase() === PARDOT.toLowerCase()) {
-            href = 'mailto:sgm@abts.com';
-            label = 'send email';
-          }
+      let href = p.link || '';
+      let label = 'Visit Official Housing Website';
+      const low = (href || '').trim().toLowerCase();
+      if (low === PARDOT.toLowerCase()) { href = MEDHUB; label = 'Request Housing'; }
+      else if (low === MEDHUB.toLowerCase()) { label = 'Request Housing'; }
 
-          const card=document.createElement('div'); card.className='card';
-          card.dataset.uid = p.uid;
-          card.innerHTML=`
-            <div class="card-title">${p.name}</div>
-            <div class="card-sub">${p.location}</div>
-            <div class="card-dates">${p.start} → ${p.end}</div>
-            ${href ? `<a class="card-link" href="${href}" target="_blank" rel="noopener">${label}</a>` : ``}
-          `;
-          card.addEventListener('click', ()=> openPopupAndSelectCard(f, p));
-          groupDiv.appendChild(card);
-        });
-        cardsRoot.appendChild(groupDiv);
-      });
+      const card=document.createElement('div'); card.className='card';
+      card.dataset.uid = p.uid;
+      card.innerHTML=`
+        <div class="card-title">${p.name}</div>
+        <div class="card-sub">${p.location}</div>
+        <div class="card-dates">${p.start} → ${p.end}</div>
+        ${href ? `<a class="card-link" href="${href}" target="_blank" rel="noopener">${label}</a>` : ``}
+      `;
+      card.addEventListener('click', ()=> openPopupAndSelectCard(f, p));
+      groupDiv.appendChild(card);
+    });
+    cardsRoot.appendChild(groupDiv);
+  });
 
-      // If there are no matches, clear the right panel
-      if (!Object.keys(bySub).length) {
-        cardsRoot.innerHTML = '';
-      }
-    }
+  if (!Object.keys(bySub).length) cardsRoot.innerHTML = '';
+}
 
-    // Small debounce helper
-    function debounce(fn, wait=200){
-      let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); };
-    }
+
+    function debounce(fn, wait=200){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); }; }
   </script>
 </body>
 </html>
