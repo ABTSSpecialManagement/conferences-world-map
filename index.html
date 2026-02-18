@@ -137,70 +137,78 @@
 
     // Old Pardot (fallback guard) and new Medical Hub constants
     const PARDOT = 'https://go.pardot.com/l/1075812/2025-08-07/kcd92j';
-    const MEDHUB = 'https://medicalhub.abtscs.com/Groups.aspx';
+    const MEDHUB = 'https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH';
 
     // City dictionary
     const cityCoords = {
-      "San Francisco": [-122.4194, 37.7749],
-      "Edinburgh": [-3.1883, 55.9533],
-      "Dublin": [-6.2603, 53.3498],
-      "Salt Lake City": [-111.8910, 40.7608],
-      "San Diego": [-117.1611, 32.7157],
-      "Hong Kong": [114.1694, 22.3193],
-      "Stockholm": [18.0686, 59.3293],
-      "Los Angeles": [-118.2437, 34.0522],
-      "Copenhagen": [12.5683, 55.6761],
-      "Lisabon": [-9.1393, 38.7223],
-      "Lisbon": [-9.1393, 38.7223],
-      "Miami": [-80.1918, 25.7617],
-      "Phoenix": [-112.0740, 33.4484],
-      "Orlando": [-81.3792, 28.5383],
-      "Budapest": [19.0402, 47.4979],
-      "London": [-0.1276, 51.5074],
-      "Seville": [-5.9845, 37.3891],
-      "Krakow": [19.9445, 50.0647],
-      "San Antonio": [-98.4936, 29.4241],
-      "New Orleans": [-90.0715, 29.9511],
-      "Florence": [11.2558, 43.7696],
-      "Denver": [-104.9903, 39.7392],
-      "Prague": [14.4378, 50.0755],
-      "Warsaw": [21.0122, 52.2297],
-      "San Juan": [-66.1057, 18.4655],
-      "São Paulo": [-46.6333, -23.5505],
-      "Sao Paulo": [-46.6333, -23.5505],
-      "Paris": [2.3522, 48.8566],
-      "Munich": [11.5820, 48.1351],
-      "Kuala Lumpur": [101.6869, 3.1390],
-      "Washington, DC": [-77.0369, 38.9072],
-      "Washington": [-77.0369, 38.9072],
-      "Toronto": [-79.3832, 43.6532],
-      "Berlin": [13.4050, 52.5200],
-      "Istanbul, Turkey": [28.9784, 41.0082],
-      "Istanbul": [28.9784, 41.0082],
-      "Barcelona": [2.1734, 41.3851],
-      "Valencia": [-0.3763, 39.4699],
-      "Charlotte": [-80.8431, 35.2271],
-      "Chicago": [-87.6298, 41.8781],
-      "Glasgow": [-4.2518, 55.8642],
-      "Athens": [23.7275, 37.9838],
-      "Philadelphia": [-75.1652, 39.9526],
-      "Amsterdam": [4.9041, 52.3676],
-      "Lugano": [8.9511, 46.0037],
-      "Lille": [3.0573, 50.6292],
-      "Geneva": [6.1432, 46.2044],
-      "Queensland": [153.0251, -27.4698],
-      "Marseilles": [5.3698, 43.2965],
-      "Marseille": [5.3698, 43.2965],
-      "Seoul": [126.978, 37.5665],
-      "Hiroshima": [132.4553, 34.3853],
-      "Vienna": [16.3738, 48.2082],
-      "Thessaloniki": [22.9444, 40.6401],
-      "Madrid": [-3.7038, 40.4168],
-      "Las Vegas": [-115.1398, 36.1699],
-      "Atlanta": [-84.388, 33.749],
-      "Boston": [-71.0589, 42.3601],
-      "San Diego County": [-117.1611, 32.7157]
-    };
+  "San Francisco": [-122.4194, 37.7749],
+  "Edinburgh": [-3.1883, 55.9533],
+  "Dublin": [-6.2603, 53.3498],
+  "Salt Lake City": [-111.8910, 40.7608],
+  "San Diego": [-117.1611, 32.7157],
+  "Hong Kong": [114.1694, 22.3193],
+  "Stockholm": [18.0686, 59.3293],
+  "Los Angeles": [-118.2437, 34.0522],
+  "Copenhagen": [12.5683, 55.6761],
+  "Lisabon": [-9.1393, 38.7223],
+  "Lisbon": [-9.1393, 38.7223],
+  "Miami": [-80.1918, 25.7617],
+  "Phoenix": [-112.0740, 33.4484],
+  "Orlando": [-81.3792, 28.5383],
+  "Budapest": [19.0402, 47.4979],
+  "London": [-0.1276, 51.5074],
+  "Seville": [-5.9845, 37.3891],
+  "Krakow": [19.9445, 50.0647],
+  "San Antonio": [-98.4936, 29.4241],
+  "New Orleans": [-90.0715, 29.9511],
+  "Florence": [11.2558, 43.7696],
+  "Denver": [-104.9903, 39.7392],
+  "Prague": [14.4378, 50.0755],
+  "Warsaw": [21.0122, 52.2297],
+  "San Juan": [-66.1057, 18.4655],
+  "São Paulo": [-46.6333, -23.5505],
+  "Sao Paulo": [-46.6333, -23.5505],
+  "Paris": [2.3522, 48.8566],
+  "Munich": [11.5820, 48.1351],
+  "Kuala Lumpur": [101.6869, 3.1390],
+  "Washington, DC": [-77.0369, 38.9072],
+  "Washington": [-77.0369, 38.9072],
+  "Toronto": [-79.3832, 43.6532],
+  "Berlin": [13.4050, 52.5200],
+  "Istanbul, Turkey": [28.9784, 41.0082],
+  "Istanbul": [28.9784, 41.0082],
+  "Barcelona": [2.1734, 41.3851],
+  "Valencia": [-0.3763, 39.4699],
+  "Charlotte": [-80.8431, 35.2271],
+  "Chicago": [-87.6298, 41.8781],
+  "Glasgow": [-4.2518, 55.8642],
+  "Athens": [23.7275, 37.9838],
+  "Philadelphia": [-75.1652, 39.9526],
+  "Amsterdam": [4.9041, 52.3676],
+  "Lugano": [8.9511, 46.0037],
+  "Lille": [3.0573, 50.6292],
+  "Geneva": [6.1432, 46.2044],
+  "Queensland": [153.0251, -27.4698],
+  "Marseilles": [5.3698, 43.2965],
+  "Marseille": [5.3698, 43.2965],
+  "Seoul": [126.978, 37.5665],
+  "Hiroshima": [132.4553, 34.3853],
+  "Vienna": [16.3738, 48.2082],
+  "Thessaloniki": [22.9444, 40.6401],
+  "Madrid": [-3.7038, 40.4168],
+  "Las Vegas": [-115.1398, 36.1699],
+  "Atlanta": [-84.388, 33.749],
+  "Boston": [-71.0589, 42.3601],
+  "San Diego County": [-117.1611, 32.7157],
+
+  // ✅ added for newly added conferences
+  "Long Beach": [-118.193741, 33.770050],
+  "Montreal": [-73.561668, 45.508888],
+  "New York": [-74.00597, 40.71427],
+  "Seattle": [-122.3321, 47.6062],
+  "Panama City": [-79.5333, 8.9667]
+};
+
 
     const normalizeCity = (s) => {
       if (!s) return s;
@@ -402,12 +410,21 @@
 
       // Link labeling rules
       let href = props.link || '';
-      let label = 'Visit Official Housing Website';
-      if (href) {
-        const low = href.trim().toLowerCase();
-        if (low === PARDOT.toLowerCase()) { href = MEDHUB; label = 'Request Housing'; }
-        else if (low === MEDHUB.toLowerCase()) { label = 'Request Housing'; }
-      }
+let label = 'Visit Official Housing Website';
+
+if (href) {
+  const low = href.trim().toLowerCase();
+
+  // if it's the old Pardot link, swap to MedHub
+  if (low === PARDOT.toLowerCase()) {
+    href = 'https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH';
+    label = 'Request Housing';
+  }
+  // if it's any MedicalHub Groups link (with or without UTM params)
+  else if (low.includes('medicalhub.abtscs.com/groups.aspx')) {
+    label = 'Request Housing';
+  }
+}
       const linkHTML = href ? `<div style="margin-top:6px"><a href="${href}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">${label}</a></div>` : '';
 
       const popup = new mapboxgl.Popup()
@@ -493,10 +510,19 @@
       const p=f.properties;
 
       let href = p.link || '';
-      let label = 'Visit Official Housing Website';
-      const low = (href || '').trim().toLowerCase();
-      if (low === PARDOT.toLowerCase()) { href = MEDHUB; label = 'Request Housing'; }
-      else if (low === MEDHUB.toLowerCase()) { label = 'Request Housing'; }
+let label = 'Visit Official Housing Website';
+
+if (href) {
+  const low = href.trim().toLowerCase();
+
+  if (low === PARDOT.toLowerCase()) {
+    href = 'https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH';
+    label = 'Request Housing';
+  } else if (low.includes('medicalhub.abtscs.com/groups.aspx')) {
+    label = 'Request Housing';
+  }
+}
+
 
       const card=document.createElement('div'); card.className='card';
       card.dataset.uid = p.uid;
