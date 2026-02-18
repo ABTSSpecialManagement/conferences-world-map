@@ -139,6 +139,19 @@
     const PARDOT = 'https://go.pardot.com/l/1075812/2025-08-07/kcd92j';
     const MEDHUB = 'https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH';
 
+    // ✅ Robust check: exact host + exact path (works regardless of params/case)
+    function isMedHubGroups(href){
+      try {
+        const u = new URL((href || '').trim());
+        return (
+          u.hostname.toLowerCase() === 'medicalhub.abtscs.com' &&
+          u.pathname.toLowerCase() === '/groups.aspx'
+        );
+      } catch {
+        return false;
+      }
+    }
+
     // City dictionary
     const cityCoords = {
   "San Francisco": [-122.4194, 37.7749],
@@ -208,7 +221,6 @@
   "Seattle": [-122.3321, 47.6062],
   "Panama City": [-79.5333, 8.9667]
 };
-
 
     const normalizeCity = (s) => {
       if (!s) return s;
@@ -410,21 +422,22 @@
 
       // Link labeling rules
       let href = props.link || '';
-let label = 'Visit Official Housing Website';
+      let label = 'Visit Official Housing Website';
 
-if (href) {
-  const low = href.trim().toLowerCase();
+      if (href) {
+        const low = href.trim().toLowerCase();
 
-  // if it's the old Pardot link, swap to MedHub
-  if (low === PARDOT.toLowerCase()) {
-    href = 'https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH';
-    label = 'Request Housing';
-  }
-  // if it's any MedicalHub Groups link (with or without UTM params)
-  else if (low.includes('medicalhub.abtscs.com/groups.aspx')) {
-    label = 'Request Housing';
-  }
-}
+        // if it's the old Pardot link, swap to MedHub
+        if (low === PARDOT.toLowerCase()) {
+          href = MEDHUB;
+          label = 'Request Housing';
+        }
+        // ✅ if it's MedHub Groups.aspx (regardless of params/case), label it Request Housing
+        else if (isMedHubGroups(href)) {
+          label = 'Request Housing';
+        }
+      }
+
       const linkHTML = href ? `<div style="margin-top:6px"><a href="${href}" target="_blank" rel="noopener" style="color:#1f6feb;text-decoration:underline">${label}</a></div>` : '';
 
       const popup = new mapboxgl.Popup()
@@ -474,75 +487,79 @@ if (href) {
     function getQuery(){ return (document.getElementById('search').value || '').trim().toLowerCase(); }
 
     function applyFilters(){
-  const q = getQuery();
-  const selectedSubs = [...document.querySelectorAll('#filters input[data-sub]:checked')]
-    .map(i => i.dataset.sub);
+      const q = getQuery();
+      const selectedSubs = [...document.querySelectorAll('#filters input[data-sub]:checked')]
+        .map(i => i.dataset.sub);
 
-  let mapFilter, bySub = {};
+      let mapFilter, bySub = {};
 
-  if (selectedSubs.length === 0 && !q) {
-    mapFilter = ['==', ['get','subcategory'], '__none__'];
-  } else if (selectedSubs.length === 0 && q) {
-    mapFilter = ['in', q, ['downcase',['get','hay']]];
-    features.forEach(f=>{ const p=f.properties; if (p.hay.includes(q)) (bySub[p.subcategory] ||= []).push(f); });
-  } else if (selectedSubs.length > 0 && !q) {
-    mapFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
-    features.forEach(f=>{ const p=f.properties; if (selectedSubs.includes(p.subcategory)) (bySub[p.subcategory] ||= []).push(f); });
-  } else {
-    const subsFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
-    const textFilter = ['in', q, ['downcase',['get','hay']]];
-    mapFilter = ['all', subsFilter, textFilter];
-    features.forEach(f=>{ const p=f.properties; if (selectedSubs.includes(p.subcategory) && p.hay.includes(q)) (bySub[p.subcategory] ||= []).push(f); });
-  }
+      if (selectedSubs.length === 0 && !q) {
+        mapFilter = ['==', ['get','subcategory'], '__none__'];
+      } else if (selectedSubs.length === 0 && q) {
+        mapFilter = ['in', q, ['downcase',['get','hay']]];
+        features.forEach(f=>{ const p=f.properties; if (p.hay.includes(q)) (bySub[p.subcategory] ||= []).push(f); });
+      } else if (selectedSubs.length > 0 && !q) {
+        mapFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
+        features.forEach(f=>{ const p=f.properties; if (selectedSubs.includes(p.subcategory)) (bySub[p.subcategory] ||= []).push(f); });
+      } else {
+        const subsFilter = ['any', ...selectedSubs.map(sub => ['==', ['get','subcategory'], sub])];
+        const textFilter = ['in', q, ['downcase',['get','hay']]];
+        mapFilter = ['all', subsFilter, textFilter];
+        features.forEach(f=>{ const p=f.properties; if (selectedSubs.includes(p.subcategory) && p.hay.includes(q)) (bySub[p.subcategory] ||= []).push(f); });
+      }
 
-  if (map.getLayer('conferences-layer')) map.setFilter('conferences-layer', mapFilter);
+      if (map.getLayer('conferences-layer')) map.setFilter('conferences-layer', mapFilter);
 
-  const parse = (s)=> Date.parse(s) || Infinity;
-  Object.values(bySub).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
+      const parse = (s)=> Date.parse(s) || Infinity;
+      Object.values(bySub).forEach(arr => arr.sort((a,b)=> parse(a.properties.start)-parse(b.properties.start)));
 
-  // use the top-level cardsRoot here
-  cardsRoot.innerHTML='';
-  Object.keys(bySub).sort((a,b)=>a.localeCompare(b)).forEach(subLabel=>{
-    const groupDiv=document.createElement('div'); groupDiv.className='card-group';
-    groupDiv.innerHTML = `<div class="card-group-title">${colorDot(subColor[subLabel] || '#ccc')} ${subLabel}</div>`;
+      // use the top-level cardsRoot here
+      cardsRoot.innerHTML='';
+      Object.keys(bySub).sort((a,b)=>a.localeCompare(b)).forEach(subLabel=>{
+        const groupDiv=document.createElement('div'); groupDiv.className='card-group';
+        groupDiv.innerHTML = `<div class="card-group-title">${colorDot(subColor[subLabel] || '#ccc')} ${subLabel}</div>`;
 
-    bySub[subLabel].forEach(f=>{
-      const p=f.properties;
+        bySub[subLabel].forEach(f=>{
+          const p=f.properties;
 
-      let href = p.link || '';
-let label = 'Visit Official Housing Website';
+          let href = p.link || '';
+          let label = 'Visit Official Housing Website';
 
-if (href) {
-  const low = href.trim().toLowerCase();
+          if (href) {
+            const low = href.trim().toLowerCase();
 
-  if (low === PARDOT.toLowerCase()) {
-    href = 'https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH';
-    label = 'Request Housing';
-  } else if (low.includes('medicalhub.abtscs.com/groups.aspx')) {
-    label = 'Request Housing';
-  }
-}
+            if (low === PARDOT.toLowerCase()) {
+              href = MEDHUB;
+              label = 'Request Housing';
+            } else if (isMedHubGroups(href)) {
+              label = 'Request Housing';
+            }
+          }
 
+          const card=document.createElement('div'); card.className='card';
+          card.dataset.uid = p.uid;
+          card.innerHTML=`
+            <div class="card-title">${p.name}</div>
+            <div class="card-sub">${p.location}</div>
+            <div class="card-dates">${p.start} → ${p.end}</div>
+            ${href ? `<a class="card-link" href="${href}" target="_blank" rel="noopener">${label}</a>` : ``}
+          `;
+          card.addEventListener('click', ()=> openPopupAndSelectCard(f, p));
+          groupDiv.appendChild(card);
+        });
+        cardsRoot.appendChild(groupDiv);
+      });
 
-      const card=document.createElement('div'); card.className='card';
-      card.dataset.uid = p.uid;
-      card.innerHTML=`
-        <div class="card-title">${p.name}</div>
-        <div class="card-sub">${p.location}</div>
-        <div class="card-dates">${p.start} → ${p.end}</div>
-        ${href ? `<a class="card-link" href="${href}" target="_blank" rel="noopener">${label}</a>` : ``}
-      `;
-      card.addEventListener('click', ()=> openPopupAndSelectCard(f, p));
-      groupDiv.appendChild(card);
-    });
-    cardsRoot.appendChild(groupDiv);
-  });
+      if (!Object.keys(bySub).length) cardsRoot.innerHTML = '';
+    }
 
-  if (!Object.keys(bySub).length) cardsRoot.innerHTML = '';
-}
-
-
-    function debounce(fn, wait=200){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); }; }
+    function debounce(fn, wait=200){
+      let t;
+      return (...args)=>{
+        clearTimeout(t);
+        t=setTimeout(()=>fn(...args), wait);
+      };
+    }
   </script>
 </body>
 </html>
