@@ -569,8 +569,8 @@
     "location_raw": "Miami",
     "short_name": "MBCC",
     "full_name": "The Annual Miami Breast Cancer Conference®",
-    "start_date": "TBD",
-    "end_date": "TBD",
+    "start_date": "",
+    "end_date": "",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
