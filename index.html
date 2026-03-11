@@ -288,7 +288,7 @@
       const feats = [];
       for (const r of rows){
         const sub  = r.subspecialty || r.sub || 'Other';
-        const name = r.short_name || r.name || '(TBA)';
+        const name = r.short_name || r.name || '(TBD)';
         const full = r.full_name || '';
         const cityRaw = normalizeCity(r.location_raw || r.city || '');
         const start = normalizeDate(r.start_date || r.start);
@@ -303,13 +303,13 @@
         }
         if (!coords) continue;
 
-        const uid = [name, start || 'TBA', cityRaw || 'TBA', link || ''].join('|');
+        const uid = [name, start || 'TBD', cityRaw || 'TBD', link || ''].join('|');
 
         const hay = [sub, name, full, cityRaw, start || '', end || '', link || ''].join(' | ').toLowerCase();
 
         feats.push({
           type:'Feature',
-          properties:{ subcategory: sub, name, full_name: full, location: cityRaw, start: start || 'TBA', end: end || 'TBA', link, uid, hay },
+          properties:{ subcategory: sub, name, full_name: full, location: cityRaw, start: start || 'TBD', end: end || 'TBD', link, uid, hay },
           geometry:{ type:'Point', coordinates: coords }
         });
       }
