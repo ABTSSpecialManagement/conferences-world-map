@@ -569,8 +569,8 @@
     "location_raw": "Miami",
     "short_name": "MBCC",
     "full_name": "The Annual Miami Breast Cancer Conference®",
-    "start_date": "",
-    "end_date": "",
+    "start_date": "2027-03-04",
+    "end_date": "2027-03-07",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -758,11 +758,11 @@
   {
     "semester": "I",
     "subspecialty": "Urology",
-    "location_raw": "London",
+    "location_raw": "Amsterdam",
     "short_name": "EAU",
     "full_name": "EAU Congress",
-    "start_date": "2026-03-13",
-    "end_date": "2026-03-16",
+    "start_date": "2027-03-19",
+    "end_date": "2027-03-22",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
