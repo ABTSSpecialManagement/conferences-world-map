@@ -590,11 +590,11 @@
   {
     "semester": "I",
     "subspecialty": "Oncology",
-    "location_raw": "Copenhagen",
+    "location_raw": "",
     "short_name": "ELCC",
     "full_name": "European Lung Cancer Congress",
-    "start_date": "2026-03-25",
-    "end_date": "2026-03-28",
+    "start_date": "",
+    "end_date": "",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -701,8 +701,8 @@
     "location_raw": "San Antonio",
     "short_name": "USCAP",
     "full_name": "USCAP Annual Meeting",
-    "start_date": "2026-03-21",
-    "end_date": "2026-03-26",
+    "start_date": "2027-03-13",
+    "end_date": "2027-03-18",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
