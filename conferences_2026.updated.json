@@ -86,11 +86,11 @@
   {
     "semester": "I",
     "subspecialty": "Cardiology",
-    "location_raw": "New Orleans",
+    "location_raw": "Houston",
     "short_name": "ACC",
     "full_name": "ACC Scientific Sessions & Expo",
-    "start_date": "2026-03-28",
-    "end_date": "2026-03-30",
+    "start_date": "2027-04-10",
+    "end_date": "2027-04-12",
     "link": "https://acc-igh.org/Home.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -230,11 +230,11 @@
   {
     "semester": "I",
     "subspecialty": "Neurology",
-    "location_raw": "New Orleans",
+    "location_raw": "Houston",
     "short_name": "ISC",
     "full_name": "International Stroke Conference",
-    "start_date": "2026-04-02",
-    "end_date": "2026-06-02",
+    "start_date": "2027-02-10",
+    "end_date": "2027-02-12",
     "link": "https://strokeigh.heart.org/Home.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -302,11 +302,11 @@
   {
     "semester": "I",
     "subspecialty": "Dermatology",
-    "location_raw": "Denver",
+    "location_raw": "San Francisco",
     "short_name": "AAD",
     "full_name": "AAD Annual Meeting",
-    "start_date": "2026-03-27",
-    "end_date": "2026-03-31",
+    "start_date": "2027-03-19",
+    "end_date": "2027-03-23",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -590,11 +590,11 @@
   {
     "semester": "I",
     "subspecialty": "Oncology",
-    "location_raw": "",
+    "location_raw": "Munich",
     "short_name": "ELCC",
     "full_name": "European Lung Cancer Congress",
-    "start_date": "",
-    "end_date": "",
+    "start_date": "2027-03-17",
+    "end_date": "2027-03-20",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
