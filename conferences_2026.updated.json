@@ -26,11 +26,11 @@
   {
     "semester": "I",
     "subspecialty": "Neurology",
-    "location_raw": "Chicago",
+    "location_raw": "Washington",
     "short_name": "AAN",
     "full_name": "AAN Annual Meeting",
-    "start_date": "2026-04-18",
-    "end_date": "2026-04-22",
+    "start_date": "2027-05-01",
+    "end_date": "2027-05-05",
     "link": "https://aan-igh.com/Home.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -170,11 +170,11 @@
   {
     "semester": "I",
     "subspecialty": "Ophthalmology",
-    "location_raw": "Washington",
+    "location_raw": "San Diego",
     "short_name": "ASCRS",
     "full_name": "ASCRS Annual Meeting",
-    "start_date": "2026-04-10",
-    "end_date": "2026-04-13",
+    "start_date": "2027-04-02",
+    "end_date": "2027-04-05",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -350,11 +350,11 @@
   {
     "semester": "I",
     "subspecialty": "Hematology",
-    "location_raw": "Kuala Lumpur",
+    "location_raw": "Chicago",
     "short_name": "WFH",
     "full_name": "WFH Comprehensive Care Summit",
-    "start_date": "2026-04-19",
-    "end_date": "2026-04-22",
+    "start_date": "2028-04-30",
+    "end_date": "2028-05-04",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -398,11 +398,11 @@
   {
     "semester": "I",
     "subspecialty": "Infectious Diseases",
-    "location_raw": "Munich",
+    "location_raw": "Stockholm",
     "short_name": "ESCMID",
     "full_name": "ESCMID Global",
-    "start_date": "2026-04-17",
-    "end_date": "2026-04-21",
+    "start_date": "2027-04-09",
+    "end_date": "2027-04-13",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -602,11 +602,11 @@
   {
     "semester": "I",
     "subspecialty": "Oncology",
-    "location_raw": "San Juan",
+    "location_raw": "Phoenix",
     "short_name": "SGO",
     "full_name": "SGO Annual Meeting on Women's Cancer",
-    "start_date": "2026-04-11",
-    "end_date": "2026-04-13",
+    "start_date": "2027-03-19",
+    "end_date": "2027-03-22",
     "link": "https://sgo-igh.org?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -614,11 +614,11 @@
   {
     "semester": "I",
     "subspecialty": "Oncology",
-    "location_raw": "San Diego",
+    "location_raw": "Orlando",
     "short_name": "AACR",
     "full_name": "AACR Annual Meeting",
-    "start_date": "2026-04-17",
-    "end_date": "2026-04-22",
+    "start_date": "2027-04-02",
+    "end_date": "2027-04-07",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -795,11 +795,11 @@
   {
     "semester": "I",
     "subspecialty": "Cardiology",
-    "location_raw": "Paris",
+    "location_raw": "TBD",
     "short_name": "EHRA",
     "full_name": "European Heart Rhythm Association",
-    "start_date": "2026-04-12",
-    "end_date": "2026-04-14",
+    "start_date": "TBD",
+    "end_date": "TBD",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -807,11 +807,11 @@
   {
     "semester": "I",
     "subspecialty": "Internal Medicine",
-    "location_raw": "San Francisco",
+    "location_raw": "Los Angeles",
     "short_name": "ACP",
     "full_name": "American College of Physicians",
-    "start_date": "2026-04-16",
-    "end_date": "2026-04-18",
+    "start_date": "2027-04-15",
+    "end_date": "2027-04-17",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
