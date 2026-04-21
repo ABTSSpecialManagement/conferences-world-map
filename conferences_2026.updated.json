@@ -206,11 +206,11 @@
   {
     "semester": "I",
     "subspecialty": "Cardiology",
-    "location_raw": "Chicago",
+    "location_raw": "San Francisco",
     "short_name": "HRS",
     "full_name": "Heart Rhythm",
-    "start_date": "2026-04-23",
-    "end_date": "2026-04-26",
+    "start_date": "2027-05-13",
+    "end_date": "2027-05-16",
     "link": "https://heartrhythminternationalgrouphousing.org/Home.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -290,11 +290,11 @@
   {
     "semester": "I",
     "subspecialty": "Cardiology",
-    "location_raw": "Toronto",
+    "location_raw": "Sydney",
     "short_name": "ISHLT",
     "full_name": "ISHLT Annual Meeting",
-    "start_date": "2026-04-25",
-    "end_date": "2026-04-23",
+    "start_date": "2027-04-14",
+    "end_date": "2027-04-17",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -629,8 +629,8 @@
     "location_raw": "Washington, DC",
     "short_name": "ONS",
     "full_name": "ONS Congres",
-    "start_date": "2026-04-24",
-    "end_date": "2026-04-28",
+    "start_date": "2027-04-14",
+    "end_date": "2027-04-18",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -795,11 +795,11 @@
   {
     "semester": "I",
     "subspecialty": "Cardiology",
-    "location_raw": "Paris",
+    "location_raw": "Helsinki",
     "short_name": "EHRA",
     "full_name": "European Heart Rhythm Association",
-    "start_date": "2026-04-12",
-    "end_date": "2026-04-14",
+    "start_date": "2027-04-11",
+    "end_date": "2027-04-13",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
