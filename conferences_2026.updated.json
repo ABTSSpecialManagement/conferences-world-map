@@ -995,17 +995,5 @@
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
-  },
-    {
-    "semester": "I",
-    "subspecialty": "Ophthalmology",
-    "location_raw": "San Diego",
-    "short_name": "ARVO",
-    "full_name": "Association for Research in Vision and Ophthalmology",
-    "start_date": "2027-05-02",
-    "end_date": "2027-05-06",
-    "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
-    "lat": null,
-    "lon": null
   }
 ]
