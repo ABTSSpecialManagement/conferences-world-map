@@ -509,8 +509,8 @@
     "location_raw": "Basel",
     "short_name": "ECO",
     "full_name": "European Congress of Obesity",
-    "start_date": null,
-    "end_date": null,
+    "start_date": "2027-05-18",
+    "end_date": "2027-05-21",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -722,11 +722,11 @@
   {
     "semester": "I",
     "subspecialty": "Pulmonology",
-    "location_raw": "Orlando",
+    "location_raw": "New Orleans",
     "short_name": "ATS",
     "full_name": "ATS International Conference",
-    "start_date": "2026-05-15",
-    "end_date": "2026-05-20",
+    "start_date": "2027-05-14",
+    "end_date": "2027-05-19",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -770,11 +770,11 @@
   {
     "semester": "I",
     "subspecialty": "Urology",
-    "location_raw": "Washington",
+    "location_raw": "Houston",
     "short_name": "AUA",
     "full_name": "AUA Annual Meeting",
-    "start_date": "2026-05-15",
-    "end_date": "2026-05-18",
+    "start_date": "2027-04-02",
+    "end_date": "2027-04-04",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -831,11 +831,11 @@
   {
     "semester": "I",
     "subspecialty": "Health Economics",
-    "location_raw": "Philadelphia",
+    "location_raw": "Denver",
     "short_name": "ISPOR",
     "full_name": "The Professional Society for Health Economics and Outcomes Research",
-    "start_date": "2026-05-17",
-    "end_date": "2026-05-20",
+    "start_date": "2027-05-23",
+    "end_date": "2027-05-26",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
