@@ -386,11 +386,11 @@
   {
     "semester": "I",
     "subspecialty": "Hepatology",
-    "location_raw": "Barcelona",
+    "location_raw": "London",
     "short_name": "EASL",
     "full_name": "EASL Congress",
-    "start_date": "2026-05-27",
-    "end_date": "2026-05-30",
+    "start_date": "2027-06-16",
+    "end_date": "2027-06-19",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -446,11 +446,11 @@
   {
     "semester": "I",
     "subspecialty": "Neurology",
-    "location_raw": "Charlotte",
+    "location_raw": "San Diego",
     "short_name": "CMSC",
     "full_name": "CMSC Annual Meeting",
-    "start_date": "2026-05-27",
-    "end_date": "2026-05-30",
+    "start_date": "2027-06-02",
+    "end_date": "2027-06-05",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -641,8 +641,8 @@
     "location_raw": "Chicago",
     "short_name": "ASCO",
     "full_name": "ASCO Annual Meeting",
-    "start_date": "2026-05-29",
-    "end_date": "2026-06-02",
+    "start_date": "2027-06-04",
+    "end_date": "2027-06-08",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
