@@ -314,11 +314,11 @@
   {
     "semester": "I",
     "subspecialty": "Drug Development / Regulatory Science",
-    "location_raw": "Philadelphia",
+    "location_raw": "San Diego",
     "short_name": "DIA",
     "full_name": "DIA Global Annual Meeting",
-    "start_date": "2026-06-14",
-    "end_date": "2026-06-18",
+    "start_date": "2027-06-27",
+    "end_date": "2027-07-01",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -362,11 +362,11 @@
   {
     "semester": "I",
     "subspecialty": "Hematology",
-    "location_raw": "Stockholm",
+    "location_raw": "Barcelona",
     "short_name": "EHA",
     "full_name": "EHA Congress",
-    "start_date": "2026-06-11",
-    "end_date": "2026-06-14",
+    "start_date": "2027-06-10",
+    "end_date": "2027-06-13",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -470,11 +470,11 @@
   {
     "semester": "I",
     "subspecialty": "Neurology",
-    "location_raw": "Geneva",
+    "location_raw": "Gothenburg",
     "short_name": "EAN",
     "full_name": "Congress of the European Academy of Neurology",
-    "start_date": "2026-06-27",
-    "end_date": "2026-06-30",
+    "start_date": "2027-06-12",
+    "end_date": "2027-06-15",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -665,8 +665,8 @@
     "location_raw": "Lugano",
     "short_name": "ICML",
     "full_name": "International Conference on Malignant Lymphoma",
-    "start_date": "2026-06-17",
-    "end_date": "2026-06-21",
+    "start_date": "2027-06-15",
+    "end_date": "2027-06-19",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
@@ -746,11 +746,11 @@
   {
     "semester": "I",
     "subspecialty": "Rheumatology",
-    "location_raw": "London",
+    "location_raw": "Berlin",
     "short_name": "EULAR",
     "full_name": "European Congress of Rheumatology",
-    "start_date": "2026-05-30",
-    "end_date": "2026-06-01",
+    "start_date": "2027-06-09",
+    "end_date": "2027-06-12",
     "link": "https://medicalhub.abtscs.com/Groups.aspx?utm_source=MedicalMeetingHub&utm_medium=InteractiveMap&utm_campaign=MMH",
     "lat": null,
     "lon": null
